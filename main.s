@@ -129,7 +129,6 @@ main:
 
 
 @ ----- START ENCRYPT SECTION -----
-	PUSH {lr}
 
 	@ Request a message from the user to be encrypted
 	LDR r0, =messagePrompt
@@ -182,82 +181,7 @@ encrypt_done:
 	@ Close the file after writing
 	BL closeFile
 
-	POP {pc}
-@ ----- END ENCRYPT SECTION -----
-
-
-@ ----- START FILE SECTION -----
-@ Function: openFile
-@ Input: r0 = file name (pointer to string)
-@        r1 = file mode (e.g., O_WRONLY, O_CREAT)
-@ Output: r0 = file descriptor (or -1 if error)
-openFile:
-	MOV r7, #5				@ sys_open system call number
-	MOV r2, #0				@ Flags: O_WRONLY (write only), O_CREAT (create if doesn't exist)
-	LDR r3, =#0x1FF				@ Permissions (rw-rw-rw-), typically for new files
-	SWI 0					@ Make the system call
-
-	# Check for errors (negative value indicates an error)
-	CMP r0, #0				@ If file descriptor is less than 0, there was an error
-	BLT openFile_error
-
-	# File opened successfully, return file descriptor
-	BX lr
-
-openFile_error:
-	MOV r0, #-1				@ Return -1 on error
-	BX lr
-	
-	
-@ Function: writeToFile
-@ Input: r0 = file descriptor (from openFile)
-@        r1 = pointer to data (ciphertext)
-@        r2 = number of bytes to write
-writeToFile:
-	MOV r7, #4				@ sys_write system call number
-	SWI 0					@ Make the system call
-
-	# Check for errors (negative value indicates an error)
-	CMP r0, #0 				@ If the return value is less than 0, there was an error
-	BLT writeToFile_error
-
-	# Return number of bytes written (r0 contains the number of bytes written)
-	BX lr
-
-writeToFile_error:
-	MOV r0, #-1				@ Return -1 on error
-	BX lr
-
-
-//Function: readFromFile
-//Input: text file
-//Output: A single character
-readFromFile:
-	MOV r2, #1		//Read a byte
-	MOV r7, #3		//syscall number for read
-	SWI 0			//Make the syscall for read
-
-	BX lr
-	
-@ Function: closeFile
-@ Input: r0 = file descriptor (from openFile)
-@ Output: r0 = 0 if successful, -1 on error
-closeFile:
-	MOV r7, #6				@ sys_close system call number
-	SWI 0					@ Make the system call
-
-	# Check for errors (negative value indicates an error)
-	CMP r0, #0				@ If the return value is less than 0, there was an error
-	BLT closeFile_error
-
-	# File closed successfully
-	MOV r0, #0 				@ Return 0 to indicate success
-	BX lr
-
-closeFile_error:
-	MOV r0, #-1				@ Return -1 on error
-	BX lr
-@ ----- END FILE SECTION -----
+@ ----- END ENCRYPT SECTION ------
 
 //Start decrypt section
 	// Function: decrypt.s
@@ -327,7 +251,7 @@ decrypt_done:
 	// Formats 
 	format1: .asciz "%d"
 	decryptFormat: .asciz "%s"
-	inputFormat: .asciz "%d"
+	inputFormat: .asciz "%[^\n]"
 	
 	// Stored values
 
@@ -340,7 +264,7 @@ decrypt_done:
 
 @ ----- .data for the Encrypt section ----
 	messagePrompt: .asciz "Please enter the message to encrypt: \n"		@ Prompt user to enter a message
-	messageBuffer: .space 100						@ Space to store the message (up to 100 characters)
+	messageBuffer: .space 255						@ Space to store the message (up to 100 characters)
 	messageLength: .word 100						@ Maximum length for the message
 	cipherTextFile: .asciz "encrypted.txt"
 	oneByteBuf: .byte 0
