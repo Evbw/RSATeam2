@@ -6,6 +6,7 @@
 
 .text
 .global main
+
 main:
     // Program dictionary:
     // r4 - public key (e)
@@ -139,11 +140,11 @@ main:
 	BL scanf
 	@ Read message from user input into messageBuffer
 
-	LDR r0, =ciphertextFile
+	LDR r0, =cipherTextFile
 	LDR r1, =fileWriteMode
 	BL openFile
 	CMP r0, #0
-	BLT main_error
+	//BLT main_error
 	MOV r7, r0							@ r7 holds file descriptor
 
 	LDR r2, =messageBuffer				@ r2 = pointer to message
@@ -226,7 +227,17 @@ writeToFile:
 writeToFile_error:
 	MOV r0, #-1				@ Return -1 on error
 	BX lr
-	
+
+
+//Function: readFromFile
+//Input: text file
+//Output: A single character
+readFromFile:
+	MOV r2, #1		//Read a byte
+	MOV r7, #3		//syscall number for read
+	SWI 0			//Make the syscall for read
+
+	BX lr
 	
 @ Function: closeFile
 @ Input: r0 = file descriptor (from openFile)
@@ -269,7 +280,7 @@ closeFile_error:
 decrypt_loop:
 	//Read the next encrypted character
 	MOV r0, r9			//Input file 
-	LDR r1, =ciphertextBuffer	//Buffer to store the encrypted character
+	LDR r1, =cipherTextBuffer	//Buffer to store the encrypted character
 	BL readFromFile			//Read the number into the buffer
 	CMP r0, #0			//Check if we're at the end of the file
 	BEQ decrypt_done		//And exit if we are
@@ -316,6 +327,7 @@ decrypt_done:
 	// Formats 
 	format1: .asciz "%d"
 	decryptFormat: .asciz "%s"
+	inputFormat: .asciz "%d"
 	
 	// Stored values
 
@@ -330,12 +342,12 @@ decrypt_done:
 	messagePrompt: .asciz "Please enter the message to encrypt: \n"		@ Prompt user to enter a message
 	messageBuffer: .space 100						@ Space to store the message (up to 100 characters)
 	messageLength: .word 100						@ Maximum length for the message
+	cipherTextFile: .asciz "encrypted.txt"
+	oneByteBuf: .byte 0
 	//decrypt
 	encryptedFile: .asciz "encrypted.txt"
 	plaintextFile: .asciz "plaintext.txt"
 	fileReadMode: .asciz "r"
 	fileWriteMode: .asciz "w"
-	ciphertextBuffer: .space 4
+	cipherTextBuffer: .space 4
 	plaintextBuffer: .space 1
-
-
