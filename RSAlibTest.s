@@ -45,7 +45,7 @@ main:
 		BL scanf
 
 		LDR r7, =num
-		LDR r7, [r7]
+		LDR r7, [r7] //number
 
 		LDR r0, =powPrompt2
 		BL printf
@@ -54,11 +54,23 @@ main:
 		LDR r1, =num
 		BL scanf
 
+
+		LDR r6, =num
+		LDR r6, [r6] //exponent
+
+		LDR r0, =powPrompt3
+		BL printf
+	
+		LDR r0, =input
+		LDR r1, =num
+		BL scanf
+
 		LDR r8, =num
-		LDR r8, [r8]
+		LDR r8, [r8] //modulus
+
 
 		MOV r0, r7
-		MOV r1, r8
+		MOV r1, r6
 
 		BL pow
 		MOV r1, r0
@@ -302,6 +314,7 @@ main:
 	prompt: .asciz "Please choose to create a power (1), find the greatest common denominator (2), find the modulus (3), create a public exponent (4), create a private exponent (5), check if a number is prime (6), encrypt character (7), decrypt character (8), or exit with (-1):\n"
 	powPrompt: .asciz "Please enter a number:\n"
 	powPrompt2: .asciz "Please enter an exponent:\n"
+	powPrompt3: .asciz "Please enter a modulus: \n"
 	gcdPrompt: .asciz "Please enter a term:\n"
 	gcdPrompt2: .asciz "Please enter a second term:\n"
 	moduloPrompt: .asciz "Please enter a dividend:\n"
