@@ -10,7 +10,7 @@ main:
 	BL modExp
 
 	MOV r1, r0
-	ADR r0, testOutput
+	LDR r0, =testOutput
 	BL printf
 
 	LDR lr, [sp, #0]
