@@ -207,6 +207,11 @@ main:
 
 	encryptLib:
 
+		// Clear leftover newline from previous scanf
+		LDR r0, =characterInput       // "%c"
+		LDR r1, =encryptInput1        // Use any temp space
+		BL scanf                      // Dummy read to consume '\n'
+
 		// Enter a character to encrypt
 		LDR r0, =encryptPrompt
 		BL printf
@@ -214,15 +219,18 @@ main:
 		LDR r1, =encryptInput1
 		BL scanf
 
-		// Test Case 1: m = 65 ('A'), e = 3, n = 187
-		// MOV r0, #65     // m = 'A'
-		// MOV r1, #3      // e = 3
-		// MOV r2, #187    // n = 187
-		// BL encrypt      // r0 = c = (65^3) % 187 = 83
-
 		LDR r1, =encryptInput1
 		LDR r2, [r1]
+		MOV r1, r2
+
+		// Test case 1: m = ASCII decimal, e = 3, n = 187
+		MOV r0, r2
+		MOV r1, #3
+		MOV r2, #187
+		BL encrypt
+
 		// Print result
+		MOV r1, r0
 		LDR r0, =encryptOutput
 		BL printf
 		B MenuLoop
@@ -260,4 +268,4 @@ main:
 	cpubexpLibOutput: .asciz "The public key is %d.\nThe totient is %d.\nn is %d.\n\n"
 	cprivexpOutput: .asciz "The private key is: %d. The value for x is: %d. Don't tell anyone.\n"
 	isprimeOutput: .asciz "Result: %d\nZero is not prime, one is prime.\n\n"
-	encryptOutput: .asciz "The character is %c. The decimal is %d.\n"
+	encryptOutput: .asciz "The encrypted character is %d.\n"
