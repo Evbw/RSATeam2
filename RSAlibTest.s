@@ -254,8 +254,6 @@ main:
 
 	decryptLib:
 
-		// Enter a character to decrypt
-
 		// Enter ciphertext to decrypt
 		LDR r0, =decryptPrompt
 		BL printf
@@ -287,7 +285,9 @@ main:
 		BL decrypt
 
 		// Print result
-
+		MOV r2, r0
+		LDR r1, =decryptInput1
+		LDR r1, [r1]
 		LDR r0, =decryptOutput
 		BL printf
 		B MenuLoop
@@ -336,4 +336,4 @@ main:
 	cprivexpOutput: .asciz "The private key is: %d. The value for x is: %d. Don't tell anyone.\n\n"
 	isprimeOutput: .asciz "Result: %d\nZero is not prime, one is prime.\n\n"
 	encryptOutput: .asciz "The encrypted ciphertext for character %c is %d.\n\n"
-	decryptOutput: .asciz "The encryption for ASCII decimal %d is %d.\n\n"
+	decryptOutput: .asciz "The decryption for ASCII decimal %d is %d.\n\n"
