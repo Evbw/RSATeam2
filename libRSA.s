@@ -68,76 +68,6 @@ pow:
 
 //End pow
 
-
-.text
-powMod:
-	// Push stack record
-	SUB sp, sp, #4
-	STR lr, [sp, #0]
-
-	// Purpose: result = (b^e) mod n
-	// Input:
-	//     r0 - base (b)
-	//     r1 - exponent (e)
-	//     r2 - modulus (n)
-	// Output:
-	//     r0 - result
-
-	// Function dictionary
-	// r4 - base
-	// r5 - expoonent
-	// r6 - modulus
-
-	MOV r3, #1
-	MOV r4, r0
-	MOV r5, r1
-	MOV r6, r2
-
-	// base = base % modulus; r0 = r0 % r2
-	MOV r1, r2
-	BL modulo
-	MOV  r4, r0  // Base udpated
-
-	startPowLoop:
-		CMP r5, #0
-		BEQ endPowLoop
-
-		AND r0, r5, #1
-		CMP r0, #0
-		BEQ skipMultiplication
-
-		// result = (result * base) % modulus
-		MOV r0, r3                // r0 = result
-		MOV r1, r4                // r1 = base
-		MUL r0, r0, r1            // r0 = result * base
-		MOV r1, r6                // r1 = modulus
-		BL modulo                 // r0 = (result * base) % modulus
-		MOV r3, r0                // update result
-
-		skipMultiplication:
-
-			// base = (base * base) % modulus
-			MOV r0, r4        // r0 = base
-			MUL r0, r0, r4    // r0 = base * base
-			MOV r1, r6        // r1 = modulus
-			BL modulo         // r0 = (base * base) % modulus
-			MOV r4, r0        // update base
-
-			LSRS r5, r5, #1   // r5 = r5 >> 1 (shift exp right by 1)
-			B startPowLoop
-
-	endPowLoop:
-
-	MOV r0, r3
-
-	LDR lr, [sp, #0]
-	ADD sp, sp, #4
-	MOV pc, lr
-
-.data
-//END powMod
-
-
 .text
 
 gcd:
@@ -534,29 +464,77 @@ isPrime:
 .text
 decrypt:
 
-    //
-    // Purpose: Decrypt an encrypted message using Private Key
-    // Input: 
-    //     r0 = cipher text (c) = %d
-    //     r1 = private key (d) = %d
-    //     r2 = p * q (n) = %d
-    // Output:
-    //     r0 = decrypted ascii character
-    // 
+	// push stack record
+	SUB sp, sp, #16
+	STR lr, [sp, #0]
+	STR r4, [sp, #4]
+	STR r5, [sp, #8]
+	STR r6, [sp, #12]
 
-    // push stack record
-    SUB sp, sp, #4
-    STR lr, [sp]
+	// Purpose: decrypt an ciphertext using private key; result=(b^e) mod n
+	// Input:
+	//     r0 - base (b)
+	//     r1 - exponent (e)
+	//     r2 - modulus (n)
+	// Output:
+	//     r0 - result
 
-    // m = c^d mod n
-    BL pow  // r0 = c^d
-    MOV r1, r2
-    BL modulo // r0 = c^d mod n
+	// Function dictionary
+	// r4 - ciphertext (c), base %d
+	// r5 - private key (d), exponent %d
+	// r6 - modulus (n), %d
 
-    // pop stack record
-    LDR lr, [sp]
-    ADD sp, sp, #4
-    MOV pc, lr
+	MOV r3, #1
+	MOV r4, r0
+	MOV r5, r1
+	MOV r6, r2
+
+	// Perform modular exponentiation
+	// base = base % modulus; r0 = r0 % r2
+	MOV r1, r2
+	BL modulo
+	MOV  r4, r0  // Base udpated
+
+	startPowLoop:
+
+		CMP r5, #0
+		BEQ endPowLoop
+
+		AND r0, r5, #1
+		CMP r0, #0
+		BEQ skipMultiplication
+
+		// result = (result * base) % modulus
+		MOV r0, r3        // r0 = result
+		MOV r1, r4        // r1 = base
+		MUL r0, r0, r1    // r0 = result * base
+		MOV r1, r6        // r1 = modulus
+		BL modulo         // r0 = (result * base) % modulus
+		MOV r3, r0        // update result
+
+		skipMultiplication:
+
+		// base = (base * base) % modulus
+		MOV r0, r4        // r0 = base
+		MUL r0, r0, r4    // r0 = base * base
+		MOV r1, r6        // r1 = modulus
+		BL modulo         // r0 = (base * base) % modulus
+		MOV r4, r0        // update base
+
+		LSRS r5, r5, #1   // r5 = r5 >> 1 (shift exp right by 1)
+		B startPowLoop
+
+	endPowLoop:
+
+	MOV r0, r3
+
+	// pop stack record
+	LDR lr, [sp, #0]
+	LDR r4, [sp, #4]
+	LDR r5, [sp, #8]
+	LDR r6, [sp, #12]
+	ADD sp, sp, #16
+	MOV pc, lr
 
 .data
 // END decrypt
