@@ -393,7 +393,6 @@ encrypt:
 .data
 // END encrypt
 
-
 .text
 
 isPrime:
