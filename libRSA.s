@@ -512,7 +512,7 @@ decrypt:
 		// Square base (ciphertext), then mod n
 		MUL r3, r3, r3      // r3 = ciphertext * ciphertext
 		MOV r0, r3          // r0 = ciphertext (dividend)
-		MOV r1, r8          // r1 = modulus (n)
+		MOV r1, r5          // r1 = modulus (n)
 		BL modulo     // r0 = ciphertext mod n
 		MOV r3, r0
 

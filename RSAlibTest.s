@@ -270,11 +270,20 @@ main:
 		LDR r1, =decryptInput2
 		BL scanf
 
+		LDR r0, =decryptPrompt3
+		BL printf
+		LDR r0, =input
+		LDR r1, =decryptInput3
+		BL scanf
+
 		LDR r0, =decryptInput1
 		LDR r0, [r0]
 
 		LDR r1, =decryptInput2
 		LDR r1, [r1]
+
+		LDR r2, =decryptInput3
+		LDR r2, [r2]
 		BL decrypt
 
 		// Print result
