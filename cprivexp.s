@@ -6,35 +6,6 @@
 
 .text
 .global cprivexp
-
-cprivexp:
-	
-	//push stack record
-	SUB sp, sp, #4
-	STR lr, [sp]
-
-	MOV r12, r0
-	MOV r13, r1 //preserving the toteint and the public key
-
-	MOV r0, #1
-	MOV r1, r13
-	
-	#getting modulo to do d = (1(mod(totient)))/e
-	BL modulo // 
-	MOV r1, r12
-	BL __aeabi_div
-	
-	
-	
-	MOV r1, #2//check if the number is less than 2
-	MOV r2, #2// counter
-
-	LDR lr, [sp]
-	ADD sp, sp, #4
-	MOV pc, lr
-
-.data
-.global cprivexp
 >>>>>>>>>>>
 cprivexp:
     // Push stack frame
@@ -65,7 +36,7 @@ find_x:
     B find_x            // repeat
 
 found_x:
-    // now compute d = (1 + x * totient) / e
+    // compute d = (1 + x * totient) / e
     // temp = (1 + x * totient) is already calculated above
 
     // temp is in r0 already (after MUL + ADD)

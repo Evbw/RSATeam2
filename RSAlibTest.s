@@ -174,6 +174,7 @@ main:
 
 		MOV r0, r7
 
+
 		LDR r1, =num
 		LDR r1, [r1]
 		BL cprivexp
