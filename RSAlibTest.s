@@ -244,16 +244,19 @@ main:
 		LDR r1, =decryptInput1        // Use any temp space
 		BL scanf                      // Dummy read to consume '\n'
 
-		// Enter a character to encrypt
+		// Enter a character to decrypt
 		LDR r0, =decryptPrompt
 		BL printf
-		LDR r0, =characterInput
-		LDR r1, =decryptInput1
+
+		LDR r0, =decryptInput1
+		LDR r1, =decryptChar
 		BL scanf
 
-		LDR r1, =decryptInput1
-		LDR r2, [r1]
-		MOV r1, r2
+		LDR r1, =decryptChar
+		LDR r0, [r1]
+
+		MOV r1, r4
+		MOV r2, r5 
 
 		// Test case 1: m = ASCII decimal, e = 3, n = 187
 		BL decrypt
@@ -289,7 +292,8 @@ main:
 	input: .asciz "%d"
 	num: .word 0
 	encryptInput1: .space 2
-	decryptInput1: .asciz "%[^\n]"
+	decryptInput1: .asciz "%d"
+	decryptChar: .space 4
 	cprivexpInput1: .word 0
 	cprivexpInput2: .word 0
 	powOutput: .asciz "The result is %d.\n"
@@ -299,4 +303,4 @@ main:
 	cprivexpOutput: .asciz "The private key is: %d. The value for x is: %d. Don't tell anyone.\n"
 	isprimeOutput: .asciz "Result: %d\nZero is not prime, one is prime.\n\n"
 	encryptOutput: .asciz "The encrypted character is %d.\n"
-	decryptOutput: .asciz "The decrypted character is %s.\n"
+	decryptOutput: .asciz "The decrypted character is %c.\n"
