@@ -296,14 +296,15 @@ cpubexp:
 
 cprivexp:
     // Push registers onto the stack
-    SUB sp, sp, #28
+    SUB sp, sp, #32
     STR lr, [sp, #0]
     STR r2, [sp, #4]
     STR r3, [sp, #8]
     STR r5, [sp, #12]
-    STR r6, [sp, #14]
+    STR r6, [sp, #16]
     STR r7, [sp, #20]
     STR r8, [sp, #24]
+    STR r4, [sp, #28]
 
     // Inputs:
     // r0 = e (public exponent)
@@ -358,7 +359,8 @@ found:
     LDR r6, [sp, #16]
     LDR r7, [sp, #20]
     LDR r8, [sp, #24]
-    ADD sp, sp, #28
+    LDR r4, [sp, #28]
+    ADD sp, sp, #32
     MOV pc, lr
 
 .data	
