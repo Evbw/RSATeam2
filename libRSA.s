@@ -139,6 +139,7 @@ gcd:
 modulo:
  
 # Push the stack
+
     SUB sp, sp, #20
     STR lr, [sp, #0]
     STR r2, [sp, #4]
@@ -151,15 +152,25 @@ modulo:
     MOV r6, r1            // Save r1, divisor
     BL __aeabi_idiv       // Call division (quotient in r0)
 
+
 # Store the quotient
-    MOV r2, r0            // r2 = quotient
+	MOV r2, r0			// r2 = quotient
 
 # Multiply the quotient by the divisor
+
     MOV r3, r2            // Ensure different register for MUL
     MUL r2, r3, r6        // r2 = quotient * divisor
 
+
 # Subtract to get the remainder
-    SUB r0, r5, r2        // r0 = dividend - (quotient * divisor)
+	SUB r0, r5, r2			// r0 = dividend - (quotient * divisor)
+
+ # Ensure result is non-negative
+	CMP r0, #0
+	BGE skip_fix
+	ADD r0, r0, r1		// Make it positive if needed
+    
+	skip_fix:
 
 # Ensure result is non-negative
     CMP r0, #0
@@ -169,6 +180,7 @@ modulo:
     skip_fix:
 
 # Pop the stack (and return to the OS)
+
     LDR lr, [sp, #0]
     LDR r2, [sp, #4]
     LDR r3, [sp, #8]
@@ -176,6 +188,7 @@ modulo:
     LDR r6, [sp, #16]
     ADD sp, sp, #20
     MOV pc, lr
+
 
 .data
 //End modulo
