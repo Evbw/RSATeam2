@@ -157,31 +157,30 @@ main:
 
 	cprivexpLib:
 
-		LDR r0, =cpubexpPrompt
+		LDR r0, =cprivexpPrompt
 		BL printf
 
 		LDR r0, =input
-		LDR r1, =num
+		LDR r1, =cprivexpInput1
 		BL scanf
 
-		LDR r7, =num
+		LDR r7, =cprivexpInput1
 		LDR r7, [r7]
 
-		LDR r0, =cpubexpPrompt2
+		LDR r0, =cprivexpPrompt2
 		BL printf
 	
 		LDR r0, =input
-		LDR r1, =num
+		LDR r1, =cprivexpInput2
 		BL scanf
 
 		MOV r0, r7
 
-
-		LDR r1, =num
+		LDR r1, =cprivexpInput2
 		LDR r1, [r1]
 		BL cprivexp
+		MOV r2, r1
 		MOV r1, r0
-
 		LDR r0, =cprivexpOutput
 		BL printf
 		B MenuLoop
@@ -220,12 +219,16 @@ main:
 	moduloPrompt2: .asciz "Please enter a divisor:\n"
 	cpubexpPrompt: .asciz "Requirement: p <50, p is prime. Please enter a value for p: \n"
 	cpubexpPrompt2: .asciz "Requirement: q < 50, q is prime. Please enter a value for q: \n"
+	cprivexpPrompt: .asciz "Please enter value for public key (e): \n"
+	cprivexpPrompt2: .asciz "Please enter value for totient: \n"
 	isprimePrompt: .asciz "Please enter a number to see if it is prime:\n"
 	input: .asciz "%d"
 	num: .word 0
+	cprivexpInput1: .word 0
+	cprivexpInput2: .word 0
 	powOutput: .asciz "The result is %d.\n"
 	gcdOutput: .asciz "The greatest common denominator is %d.\n"
 	moduloOutput: .asciz "The modulus is %d.\n"
 	cpubexpLibOutput: .asciz "The public key is %d.\nThe totient is %d.\nn is %d.\n\n"
-	cprivexpOutput: .asciz "The private key is %d. Don't tell anyone.\n"
+	cprivexpOutput: .asciz "The private key is: %d. The value for x is: %d. Don't tell anyone.\n"
 	isprimeOutput: .asciz "Result: %d\nZero is not prime, one is prime.\n\n"
