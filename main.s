@@ -8,10 +8,10 @@
 .global main
 main:
     // Program dictionary:
-    // r4 - rizz
-    // r5 - 
-    // r6 -
-    // r7 -
+    // r4 - public key (e)
+    // r5 - private key (d)
+    // r6 - totient
+    // r7 - modulus (n)
     // r8 -
     // r9 - 
     // r10 -
@@ -98,16 +98,24 @@ main:
     // Function: cpubexp.s
     // Inputs: r0 = p, r1 = q
     // Output: r0 = e (public key), r1 = totient, r2 = n
-    // BL cpubexp
-    // Store outputs
+    LDR r0, =pValue
+    LDR r0, [r0]
+    LDR r1, =qValue
+    LDR r1, [r1]
+    BL cpubexp
+    // Store outputs in program dictionary
+    MOV r4, r0
+    MOV r6, r1
+    MOV r7, r2
 
 
     // Receiver generates private key
     // Function: cprivexp.s
     // Input: r0 = e (public key), r1 = totient
     // Output: r0 = d (private key)
-    // BL cprivexp
-    // Store outputs
+    BL cprivexp
+    // Store outputs in program dictionary
+    MOV r5, r0
 
 
     // Request message to encrypt, using public key, from Sender
@@ -305,9 +313,7 @@ decrypt_done:
     decryptInput: .word 100
     // Error messages
     p_ErrorMsg1: .asciz "Invalid p value. Requirement: 0 <= p < 50, and must be prime.\n"
-    q_ErrorMsg1: .asciz "Invalud q value. Requirement: 0 <= q < 50, and must be prime.\n"
-    debug1: .asciz "Valid p value: %d.\n"
-    debug2: .asciz "Valid q value: %d.\n"
+    q_ErrorMsg1: .asciz "Invalid q value. Requirement: 0 <= q < 50, and must be prime.\n"
 
 @ ----- .data for the Encrypt section ----
 	messagePrompt: .asciz "Please enter the message to encrypt: \n"		@ Prompt user to enter a message
