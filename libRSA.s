@@ -71,12 +71,11 @@ pow:
 .text
 
 gcd:
-	SUB sp, sp, #20
+	SUB sp, sp, #16
 	STR lr, [sp, #0]
 	STR r3, [sp, #4]
 	STR r4, [sp, #8]
 	STR r2, [sp, #12]
-	STR r6, [sp, #16]
 
 	CMP r0, r1
 	BEQ Equal			//Handle an instance when they are the same value
@@ -125,8 +124,7 @@ gcd:
 	LDR r3, [sp, #4]
 	LDR r4, [sp, #8]
 	LDR r2, [sp, #12]
-	LDR r5, [sp, #16]
-	ADD sp, sp, #20
+	ADD sp, sp, #16
 	MOV pc, lr
 
 .data
@@ -141,9 +139,11 @@ gcd:
 modulo:
  
 # Push the stack
-    SUB sp, sp, #8
+    SUB sp, sp, #16
     STR lr, [sp, #0]
-    STR r1, [sp, #4]
+    STR r2, [sp, #4]
+    STR r3, [sp, #8]
+    STR r5, [sp, #12]
 
 # Perform division
     MOV r5, r0            // Save dividend
@@ -168,8 +168,10 @@ modulo:
 
 # Pop the stack (and return to the OS)
     LDR lr, [sp, #0]
-    LDR r1, [sp, #4]
-    ADD sp, sp, #8
+    LDR r2, [sp, #4]
+    LDR r3, [sp, #8]
+    LDR r5, [sp, #12]
+    ADD sp, sp, #16
     MOV pc, lr
 
 .data
@@ -463,79 +465,66 @@ isPrime:
 
 .text
 decrypt:
+    // push stack record
+    SUB sp, sp, #24
+    STR lr, [sp, #0]
+    STR r4, [sp, #4]
+    STR r5, [sp, #8]
+    STR r6, [sp, #12]
+    STR r7, [sp, #16]
+    STR r3, [sp, #20]
 
-	// push stack record
-	SUB sp, sp, #24
-	STR lr, [sp, #0]
-	STR r4, [sp, #4]
-	STR r5, [sp, #8]
-	STR r6, [sp, #12]
-	STR r7, [sp, #16]
-	STR r3, [sp, #20]
+    // Purpose: decrypt a ciphertext using private key; result = (c^d) mod n
+    // Input:
+    //     r0 - ciphertext (c)
+    //     r1 - private key (d)
+    //     r2 - modulus (n)
+    // Output:
+    //     r0 - plaintext (m)
 
-	// Purpose: decrypt an ciphertext using private key; result=(b^e) mod n
-	// Input:
-	//     r0 - ciphertext (c)
-	//     r1 - private key (d)
-	//     r2 - modulus (n)
-	// Output:
-	//     r0 - plaintext (m)
+    MOV r3, r0          // r3 = ciphertext (c)
+    MOV r4, r1          // r4 = private key (d)
+    MOV r5, r2          // r5 = modulus (n)
+    MOV r6, #1          // r6 = result = 1 (initialize)
 
-	// Function dictionary
-	// r4 - ciphertext (c), base %d
-	// r5 - private key (d), exponent %d
-	// r6 - modulus (n), %d
+decrypt_loop:
+    CMP r4, #0          // if d == 0, end loop
+    BEQ decrypt_done
 
-    	MOV r3, r0          // base = ciphertext (c)
-    	MOV r4, r1          // exponent = private exponent (d)
-    	MOV r5, r2          // modulus = n
-    	MOV r6, #1          // result = 1
+    AND r7, r4, #1      // if (d & 1) check if the least significant bit is 1
+    CMP r7, #0
+    BEQ decrypt_skip_multiply
 
-	decrypt_loop:
-    		CMP r4, #0          // while exponent > 0
-    		BEQ decrypt_done
+    // Multiply result by base (ciphertext), then mod n
+    MUL r6, r6, r3      // r6 = result * ciphertext
+    MOV r0, r6          // r0 = result (dividend)
+    MOV r1, r5          // r1 = modulus (n)
+    BL __aeabi_idiv     // r0 = result mod n
 
-    		AND r7, r4, #1      // if (exponent & 1)
-    		CMP r7, #0
-    		BEQ decrypt_skip_multiply
+decrypt_skip_multiply:
+    // Square base (ciphertext), then mod n
+    MUL r3, r3, r3      // r3 = ciphertext * ciphertext
+    MOV r0, r3          // r0 = ciphertext (dividend)
+    MOV r1, r5          // r1 = modulus (n)
+    BL __aeabi_idiv     // r0 = ciphertext mod n
 
-    		// result = (result * base) % modulus
-    		MUL r6, r6, r3
-    		MOV r0, r6          // dividend = result * base
-    		MOV r1, r5          // divisor = modulus
-    		BL __aeabi_idiv     // call signed divide
-    		// after BL, quotient in r0
-    		MUL r7, r0, r5      // r7 = quotient * modulus
-    		SUB r6, r6, r7      // r6 = (result * base) - (quotient * modulus)
+    // Right shift exponent by 1 (d = d // 2)
+    LSRS r4, r4, #1
 
-	decrypt_skip_multiply:
-    		// base = (base * base) % modulus
-    		MUL r3, r3, r3
-    		MOV r0, r3          // dividend = base * base
-    		MOV r1, r5          // divisor = modulus
-    		BL __aeabi_idiv
-    		// after BL, quotient in r0
-    		MUL r7, r0, r5      // r7 = quotient * modulus
-    		SUB r3, r3, r7      // r3 = (base * base) - (quotient * modulus)
+    B decrypt_loop      // Repeat the loop
 
-    		// exponent = exponent >> 1
-    		LSRS r4, r4, #1
+decrypt_done:
+    MOV r0, r6          // Move final result into r0 (plaintext)
 
-    		B decrypt_loop
-
-	decrypt_done:
-
-	MOV r0, r6          // move final result into r0
-
-	// pop stack record
-	LDR lr, [sp, #0]
-	LDR r4, [sp, #4]
-	LDR r5, [sp, #8]
-	LDR r6, [sp, #12]
-	LDR r7, [sp, #16]
-	LDR r3, [sp, #20]
-	ADD sp, sp, #24
-	MOV pc, lr
+    // pop stack record
+    LDR lr, [sp, #0]
+    LDR r4, [sp, #4]
+    LDR r5, [sp, #8]
+    LDR r6, [sp, #12]
+    LDR r7, [sp, #16]
+    LDR r3, [sp, #20]
+    ADD sp, sp, #24
+    MOV pc, lr          // return to caller
 
 .data
 // END decrypt
