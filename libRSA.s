@@ -45,6 +45,8 @@ pow:
 	EndLoop:		//Once the condition is met, end the loop and continue with the program
 
 		MOV r0, r7	//Move the value from r7 to r1
+		MOV r1, r8
+		BL modulo
 		B EndPow
 
 	ZeroExp:
@@ -188,10 +190,8 @@ cpubexp:
 
 	SUB sp, sp, #20
 	STR lr, [sp, #0]
-	STR r5, [sp, #4]
-	STR r8, [sp, #8]
-	STR r9, [sp, #12]
-	STR r10, [sp, #16]
+	STR r9, [sp, #4]
+	STR r10, [sp, #8]
 
 	// Preserve p and q
 	MOV r10, r0
@@ -247,11 +247,9 @@ cpubexp:
 	MOV r2, r8
 
 	LDR lr, [sp, #0]
-	LDR r5, [sp, #4]
-	LDR r8, [sp, #8]
-	LDR r9, [sp, #12]
-	LDR r10, [sp, #16]
-	ADD sp, sp, #20
+	LDR r9, [sp, #4]
+	LDR r10, [sp, #8]
+	ADD sp, sp, #12
 	MOV pc, lr
 
 
@@ -267,22 +265,22 @@ cpubexp:
 
 cprivexp:
     // Push registers onto the stack
-    SUB sp, sp, #32
+    SUB sp, sp, #28
     STR lr, [sp, #0]
-    STR r4, [sp, #4]
-    STR r5, [sp, #8]
-    STR r6, [sp, #12]
-    STR r8, [sp, #16]
+    STR r2, [sp, #4]
+    STR r3, [sp, #8]
+    STR r5, [sp, #12]
+    STR r6, [sp, #14]
     STR r7, [sp, #20]
-    STR r2, [sp, #24]
-    STR r3, [sp, #28]
+    STR r8, [sp, #24]
 
     // Inputs:
     // r0 = e (public exponent)
     // r1 = phi(n) (Euler's totient)
 
     MOV r6, r0        // Backup e into r6
-    MOV r7, r1        // Backup phi(n) into r7
+    MOV r9, r1        // Backup phi(n) into r9
+    MOV r7, r1
     MOV r2, #1        // Initialize x = 1
 
 find_x:
@@ -323,14 +321,13 @@ found:
 
     // Pop registers and return
     LDR lr, [sp, #0]
-    LDR r4, [sp, #4]
-    LDR r5, [sp, #8]
-    LDR r6, [sp, #12]
-    LDR r8, [sp, #16]
+    LDR r2, [sp, #4]
+    LDR r3, [sp, #8]
+    LDR r5, [sp, #12]
+    LDR r6, [sp, #16]
     LDR r7, [sp, #20]
-    LDR r2, [sp, #24]
-    LDR r3, [sp, #28]
-    ADD sp, sp, #32
+    LDR r8, [sp, #24]
+    ADD sp, sp, #28
     MOV pc, lr
 
 .data	
@@ -387,13 +384,12 @@ isPrime:
 	// 	r0 - Binary 1 (True) or 0 (False)
 
 	//push stack record
-	SUB sp, sp, #24
+	SUB sp, sp, #20
     	STR lr, [sp, #0]
 	STR r1, [sp, #4]
 	STR r2, [sp, #8]
 	STR r3, [sp, #12]
 	STR r4, [sp, #16]
-	STR r5, [sp, #20]
 
 	// Function dictionary
 	// r4 - number for prime check
@@ -448,8 +444,7 @@ isPrime:
 	LDR r2, [sp, #8]
 	LDR r3, [sp, #12]
 	LDR r4, [sp, #16]
-	LDR r5, [sp, #20]
-	ADD sp, sp, #24
+	ADD sp, sp, #20
 	MOV pc, lr
 .data
 //End isPrime
