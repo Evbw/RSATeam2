@@ -119,7 +119,6 @@ gcd:
 		B EndGCD
 
 	Equal:
-		MOV r0, r6		//If the values are equal, produce equalOutput to let the user know
 
 	EndGCD:
 

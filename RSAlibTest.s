@@ -33,6 +33,8 @@ main:
 	BEQ isPrimeLib
 	CMP r0, #7
 	BEQ encryptLib
+	CMP r0, #8
+	BEQ decryptLib
 
 	powLib:
 		LDR r0, =powPrompt
@@ -235,6 +237,35 @@ main:
 		BL printf
 		B MenuLoop
 
+	decryptLib:
+
+		// Clear leftover newline from previous scanf
+		LDR r0, =characterInput       // "%c"
+		LDR r1, =decryptInput1        // Use any temp space
+		BL scanf                      // Dummy read to consume '\n'
+
+		// Enter a character to decrypt
+		LDR r0, =decryptPrompt
+		BL printf
+
+		LDR r0, =decryptInput1
+		LDR r1, =decryptChar
+		BL scanf
+
+		LDR r1, =decryptChar
+		LDR r0, [r1]
+
+		MOV r1, r4
+		MOV r2, r5 
+
+		// Test case 1: m = ASCII decimal, e = 3, n = 187
+		BL decrypt
+
+		// Print result
+		MOV r1, r0
+		LDR r0, =decryptOutput
+		BL printf
+		B MenuLoop
 
 	EndProgram:
 
@@ -243,7 +274,7 @@ main:
 	MOV pc, lr
 
 .data
-	prompt: .asciz "Please choose to create a power (1), find the greatest common denominator (2), find the modulus (3), create a public exponent (4), create a private exponent (5), check if a number is prime (6), encrypt character (7), or exit with (-1):\n"
+	prompt: .asciz "Please choose to create a power (1), find the greatest common denominator (2), find the modulus (3), create a public exponent (4), create a private exponent (5), check if a number is prime (6), encrypt character (7), decrypt character (8), or exit with (-1):\n"
 	powPrompt: .asciz "Please enter a number:\n"
 	powPrompt2: .asciz "Please enter an exponent:\n"
 	gcdPrompt: .asciz "Please enter a term:\n"
@@ -256,10 +287,13 @@ main:
 	cprivexpPrompt2: .asciz "Please enter value for totient: \n"
 	isprimePrompt: .asciz "Please enter a number to see if it is prime:\n"
 	encryptPrompt: .asciz "Please enter a character: \n"
+	decryptPrompt: .asciz "Please enter a character to be decrypted:\n"
 	characterInput: .asciz "%c"
 	input: .asciz "%d"
 	num: .word 0
-	encryptInput1:  .space 2
+	encryptInput1: .space 2
+	decryptInput1: .asciz "%d"
+	decryptChar: .space 4
 	cprivexpInput1: .word 0
 	cprivexpInput2: .word 0
 	powOutput: .asciz "The result is %d.\n"
@@ -269,3 +303,4 @@ main:
 	cprivexpOutput: .asciz "The private key is: %d. The value for x is: %d. Don't tell anyone.\n"
 	isprimeOutput: .asciz "Result: %d\nZero is not prime, one is prime.\n\n"
 	encryptOutput: .asciz "The encrypted character is %d.\n"
+	decryptOutput: .asciz "The decrypted character is %c.\n"
