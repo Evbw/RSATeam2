@@ -6,7 +6,7 @@
 
 .text
 .global cprivexp
->>>>>>>>>>>
+
 cprivexp:
     // Push stack frame
     SUB sp, sp, #12
