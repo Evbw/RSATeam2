@@ -465,75 +465,76 @@ isPrime:
 decrypt:
 
 	// push stack record
-	SUB sp, sp, #16
+	SUB sp, sp, #24
 	STR lr, [sp, #0]
 	STR r4, [sp, #4]
 	STR r5, [sp, #8]
 	STR r6, [sp, #12]
+	STR r7, [sp, #16]
+	STR r3, [sp, #20]
 
 	// Purpose: decrypt an ciphertext using private key; result=(b^e) mod n
 	// Input:
-	//     r0 - base (b)
-	//     r1 - exponent (e)
+	//     r0 - ciphertext (c)
+	//     r1 - private key (d)
 	//     r2 - modulus (n)
 	// Output:
-	//     r0 - result
+	//     r0 - plaintext (m)
 
 	// Function dictionary
 	// r4 - ciphertext (c), base %d
 	// r5 - private key (d), exponent %d
 	// r6 - modulus (n), %d
 
-	MOV r3, #1
-	MOV r4, r0
-	MOV r5, r1
-	MOV r6, r2
+    	MOV r3, r0          // base = ciphertext (c)
+    	MOV r4, r1          // exponent = private exponent (d)
+    	MOV r5, r2          // modulus = n
+    	MOV r6, #1          // result = 1
 
-	// Perform modular exponentiation
-	// base = base % modulus; r0 = r0 % r2
-	MOV r1, r2
-	BL modulo
-	MOV  r4, r0  // Base udpated
+	decrypt_loop:
+    		CMP r4, #0          // while exponent > 0
+    		BEQ decrypt_done
 
-	startPowLoop:
+    		AND r7, r4, #1      // if (exponent & 1)
+    		CMP r7, #0
+    		BEQ decrypt_skip_multiply
 
-		CMP r5, #0
-		BEQ endPowLoop
+    		// result = (result * base) % modulus
+    		MUL r6, r6, r3
+    		MOV r0, r6          // dividend = result * base
+    		MOV r1, r5          // divisor = modulus
+    		BL __aeabi_idiv     // call signed divide
+    		// after BL, quotient in r0
+    		MUL r7, r0, r5      // r7 = quotient * modulus
+    		SUB r6, r6, r7      // r6 = (result * base) - (quotient * modulus)
 
-		AND r0, r5, #1
-		CMP r0, #0
-		BEQ skipMultiplication
+	decrypt_skip_multiply:
+    		// base = (base * base) % modulus
+    		MUL r3, r3, r3
+    		MOV r0, r3          // dividend = base * base
+    		MOV r1, r5          // divisor = modulus
+    		BL __aeabi_idiv
+    		// after BL, quotient in r0
+    		MUL r7, r0, r5      // r7 = quotient * modulus
+    		SUB r3, r3, r7      // r3 = (base * base) - (quotient * modulus)
 
-		// result = (result * base) % modulus
-		MOV r0, r3        // r0 = result
-		MOV r1, r4        // r1 = base
-		MUL r0, r0, r1    // r0 = result * base
-		MOV r1, r6        // r1 = modulus
-		BL modulo         // r0 = (result * base) % modulus
-		MOV r3, r0        // update result
+    		// exponent = exponent >> 1
+    		LSRS r4, r4, #1
 
-		skipMultiplication:
+    		B decrypt_loop
 
-		// base = (base * base) % modulus
-		MOV r0, r4        // r0 = base
-		MUL r0, r0, r4    // r0 = base * base
-		MOV r1, r6        // r1 = modulus
-		BL modulo         // r0 = (base * base) % modulus
-		MOV r4, r0        // update base
+	decrypt_done:
 
-		LSRS r5, r5, #1   // r5 = r5 >> 1 (shift exp right by 1)
-		B startPowLoop
-
-	endPowLoop:
-
-	MOV r0, r3
+	MOV r0, r6          // move final result into r0
 
 	// pop stack record
 	LDR lr, [sp, #0]
 	LDR r4, [sp, #4]
 	LDR r5, [sp, #8]
 	LDR r6, [sp, #12]
-	ADD sp, sp, #16
+	LDR r7, [sp, #16]
+	LDR r3, [sp, #20]
+	ADD sp, sp, #24
 	MOV pc, lr
 
 .data
