@@ -38,6 +38,11 @@ pow:
 		BLE EndLoop	//Branch it (B) and if the value in r6 is LESS THAN (L) or EQUAL (E) to 1, then move to EndLoop
 		
 		MUL r7, r7, r5	//Multiply the term by itself through every iteration of the loop and store in r7
+		MOV r0, r7
+		MOV r1, r8
+		BL modulo	//Perform modulo to prevent numbers from getting too large
+		MOV r7, r0
+
 		SUB r6, r6, #1	//Reduce the value of the exponent by 1 for every advance through the loop
 
 		B StartLoop	//Branch again and go back to the beginning of the StartLoop procedure
@@ -158,8 +163,8 @@ modulo:
 
 # Multiply the quotient by the divisor
 
-    MOV r3, r2            // Ensure different register for MUL
-    MUL r2, r3, r6        // r2 = quotient * divisor
+	MOV r3, r2            // Ensure different register for MUL
+	MUL r2, r3, r6        // r2 = quotient * divisor
 
 
 # Subtract to get the remainder
@@ -169,15 +174,8 @@ modulo:
 	CMP r0, #0
 	BGE skip_fix
 	ADD r0, r0, r1		// Make it positive if needed
-    
-	skip_fix:
 
-# Ensure result is non-negative
-    CMP r0, #0
-    BGE skip_fix
-    ADD r0, r0, r1        // Make it positive if needed
-    
-    skip_fix:
+	skip_fix:
 
 # Pop the stack (and return to the OS)
 
@@ -212,10 +210,8 @@ cpubexp:
 
 	SUB sp, sp, #20
 	STR lr, [sp, #0]
-	STR r5, [sp, #4]
-	STR r8, [sp, #8]
-	STR r9, [sp, #12]
-	STR r10, [sp, #16]
+	STR r9, [sp, #4]
+	STR r10, [sp, #8]
 
 	// Preserve p and q
 	MOV r10, r0
@@ -271,11 +267,9 @@ cpubexp:
 	MOV r2, r8
 
 	LDR lr, [sp, #0]
-	LDR r5, [sp, #4]
-	LDR r8, [sp, #8]
-	LDR r9, [sp, #12]
-	LDR r10, [sp, #16]
-	ADD sp, sp, #20
+	LDR r9, [sp, #4]
+	LDR r10, [sp, #8]
+	ADD sp, sp, #12
 	MOV pc, lr
 
 
@@ -291,22 +285,22 @@ cpubexp:
 
 cprivexp:
     // Push registers onto the stack
-    SUB sp, sp, #32
+    SUB sp, sp, #28
     STR lr, [sp, #0]
-    STR r4, [sp, #4]
-    STR r5, [sp, #8]
-    STR r6, [sp, #12]
-    STR r8, [sp, #16]
+    STR r2, [sp, #4]
+    STR r3, [sp, #8]
+    STR r5, [sp, #12]
+    STR r6, [sp, #14]
     STR r7, [sp, #20]
-    STR r2, [sp, #24]
-    STR r3, [sp, #28]
+    STR r8, [sp, #24]
 
     // Inputs:
     // r0 = e (public exponent)
     // r1 = phi(n) (Euler's totient)
 
     MOV r6, r0        // Backup e into r6
-    MOV r7, r1        // Backup phi(n) into r7
+    MOV r9, r1        // Backup phi(n) into r9
+    MOV r7, r1
     MOV r2, #1        // Initialize x = 1
 
 find_x:
@@ -347,14 +341,13 @@ found:
 
     // Pop registers and return
     LDR lr, [sp, #0]
-    LDR r4, [sp, #4]
-    LDR r5, [sp, #8]
-    LDR r6, [sp, #12]
-    LDR r8, [sp, #16]
+    LDR r2, [sp, #4]
+    LDR r3, [sp, #8]
+    LDR r5, [sp, #12]
+    LDR r6, [sp, #16]
     LDR r7, [sp, #20]
-    LDR r2, [sp, #24]
-    LDR r3, [sp, #28]
-    ADD sp, sp, #32
+    LDR r8, [sp, #24]
+    ADD sp, sp, #28
     MOV pc, lr
 
 .data	
@@ -364,39 +357,38 @@ found:
 .text
 encrypt:
 
-    SUB sp, sp, #4
-    STR lr, [sp]
+	SUB sp, sp, #4
+	STR lr, [sp]
 
-    // Compute m^e using pow
-    BL pow              // result in r0
+	MOV r4, r0
+	MOV r8, r2
 
-    // r0 now has m^e
-    MOV r1, r2
-    BL modulo           // r0 = (m^e) mod n
+	// Compute m^e using pow
+	BL pow              // result in r0
 
-    // Return result in r0
-    LDR lr, [sp]
-    ADD sp, sp, #4
-    MOV pc, lr
+	// Return result in r0
+	LDR lr, [sp]
+	ADD sp, sp, #4
+	MOV pc, lr
 
-    //SUB sp, sp, #12
-    //STR lr, [sp]
-    //STR r2, [sp, #4]    @ Save n
-    //STR r1, [sp, #8]    @ Save e
+	//SUB sp, sp, #12
+	//STR lr, [sp]
+	//STR r2, [sp, #4]    @ Save n
+	//STR r1, [sp, #8]    @ Save e
 
-    //@ Compute m^e using pow
-    //MOV r1, r1          @ exponent
-    //MOV r0, r0          @ base
-    //BL pow              @ result in r0
+	//@ Compute m^e using pow
+	//MOV r1, r1          @ exponent
+	//MOV r0, r0          @ base
+	//BL pow              @ result in r0
 
-    //@ r0 now has m^e
-    //LDR r1, [sp, #4]    @ r1 = n (modulus)
-    //BL modulo           @ r0 = (m^e) mod n
+	//@ r0 now has m^e
+	//LDR r1, [sp, #4]    @ r1 = n (modulus)
+	//BL modulo           @ r0 = (m^e) mod n
 
-    //@ Return result in r0
-    //LDR lr, [sp]
-    //ADD sp, sp, #12
-    //MOV pc, lr
+	//@ Return result in r0
+	//LDR lr, [sp]
+	//ADD sp, sp, #12
+	//MOV pc, lr
 
 .data
 // END encrypt
@@ -411,13 +403,12 @@ isPrime:
 	// 	r0 - Binary 1 (True) or 0 (False)
 
 	//push stack record
-	SUB sp, sp, #24
+	SUB sp, sp, #20
     	STR lr, [sp, #0]
 	STR r1, [sp, #4]
 	STR r2, [sp, #8]
 	STR r3, [sp, #12]
 	STR r4, [sp, #16]
-	STR r5, [sp, #20]
 
 	// Function dictionary
 	// r4 - number for prime check
@@ -472,8 +463,7 @@ isPrime:
 	LDR r2, [sp, #8]
 	LDR r3, [sp, #12]
 	LDR r4, [sp, #16]
-	LDR r5, [sp, #20]
-	ADD sp, sp, #24
+	ADD sp, sp, #20
 	MOV pc, lr
 .data
 //End isPrime
@@ -529,4 +519,3 @@ mod_exp_done:
 
 .data
 // END decrypt
-
