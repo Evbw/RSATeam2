@@ -18,12 +18,7 @@ main:
 	MOV pc, lr
 
 
-.data
-	testOutput: .asciz "The answer is %d\n"
-
-
 // START
-.text
 modExp:
 // Arguments:
 // r0 = base
@@ -66,4 +61,7 @@ skip_multiply:
 mod_exp_done:
     mov r0, r3              // result -> r0
     pop {r1-r4, pc}         // restore and return
+
+.data
+	testOutput: .asciz "The answer is %d\n"
 
