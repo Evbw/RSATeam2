@@ -221,18 +221,33 @@ main:
 		LDR r1, =encryptInput1
 		BL scanf
 
-		LDR r1, =encryptInput1
-		LDR r2, [r1]
-		MOV r1, r2
+		// Enter value for public key (e) and modulo (n)
+		LDR r0, =encryptPrompt2
+		BL printf
+		LDR r0, =input
+		LDR r1, =encryptInput2
+		BL scanf
 
-		// Test case 1: m = ASCII decimal, e = 3, n = 187
-		MOV r0, r2
-		MOV r1, #3
-		MOV r2, #187
+		LDR r0, =encryptPrompt3
+		BL printf
+		LDR r0, =input
+		LDR r1, =encryptInput3
+		BL scanf
+
+		// Encrypt character
+		LDR r0, =encryptInput1
+		LDRB r0, [r0]  // r0 = decimal for character
+		MOV r4, r0
+		LDR r1, =encryptInput2
+		LDR r1, [r1]
+		LDR r2, =encryptInput3
+		LDR r2, [r2]
+		MOV r8, r2
 		BL encrypt
 
 		// Print result
-		MOV r1, r0
+		MOV r2, r0
+		MOV r1, r4
 		LDR r0, =encryptOutput
 		BL printf
 		B MenuLoop
@@ -240,22 +255,29 @@ main:
 	decryptLib:
 
 		// Enter a character to decrypt
+
+		// Enter ciphertext to decrypt
 		LDR r0, =decryptPrompt
 		BL printf
-
-		LDR r0, =decryptInput1
-		LDR r1, =decryptChar
+		LDR r0, =input
+		LDR r1, =decryptInput1
 		BL scanf
 
-		LDR r1, =decryptChar
-		LDR r0, [r1]
+		// Enter value for private key (d) and modulo (n)
+		LDR r0, =decryptPrompt2
+		BL printf
+		LDR r0, =input
+		LDR r1, =decryptInput2
+		BL scanf
 
-		MOV r1, r4
-		MOV r2, r9
+		LDR r0, =decryptInput1
+		LDR r0, [r0]
+
+		LDR r1, =decryptInput2
+		LDR r1, [r1]
 		BL decrypt
 
 		// Print result
-		AND r1, r0, #0xFF
 
 		LDR r0, =decryptOutput
 		BL printf
@@ -281,20 +303,28 @@ main:
 	cprivexpPrompt2: .asciz "Please enter value for totient: \n"
 	isprimePrompt: .asciz "Please enter a number to see if it is prime:\n"
 	encryptPrompt: .asciz "Please enter a character: \n"
-	decryptPrompt: .asciz "Please enter a character to be decrypted:\n"
+	encryptPrompt2: .asciz "Please enter a value for the public key (e): \n"
+	encryptPrompt3: .asciz "Please enter a value for the modulo (n): \n"
+	decryptPrompt: .asciz "Please enter ciphertext to decrypt: \n"
+	decryptPrompt2: .asciz "Please enter a value for the private key (d): \n"
+	decryptPrompt3: .asciz "Please enter a value for the modulo (n): \n"
 	characterInput: .asciz "%c"
 	input: .asciz "%d"
 	num: .word 0
 	encryptInput1: .space 2
 	decryptInput1: .asciz "%d"
 	decryptChar: .space 100
+	encryptInput2: .word 0
+	encryptInput3: .word 0
+	decryptInput2: .word 0
+	decryptInput3: .word 0
 	cprivexpInput1: .word 0
 	cprivexpInput2: .word 0
 	powOutput: .asciz "The result is %d.\n"
 	gcdOutput: .asciz "The greatest common denominator is %d.\n"
 	moduloOutput: .asciz "The modulus is %d.\n"
 	cpubexpLibOutput: .asciz "The public key is %d.\nThe totient is %d.\nn is %d.\n\n"
-	cprivexpOutput: .asciz "The private key is: %d. The value for x is: %d. Don't tell anyone.\n"
+	cprivexpOutput: .asciz "The private key is: %d. The value for x is: %d. Don't tell anyone.\n\n"
 	isprimeOutput: .asciz "Result: %d\nZero is not prime, one is prime.\n\n"
-	encryptOutput: .asciz "The encrypted character is %d.\n"
-	decryptOutput: .asciz "The decrypted character is %c.\n"
+	encryptOutput: .asciz "The encrypted ciphertext for character %c is %d.\n\n"
+	decryptOutput: .asciz "The decryption for ciphertext %d is %d.\n\n"

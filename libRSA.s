@@ -38,6 +38,11 @@ pow:
 		BLE EndLoop	//Branch it (B) and if the value in r6 is LESS THAN (L) or EQUAL (E) to 1, then move to EndLoop
 		
 		MUL r7, r7, r5	//Multiply the term by itself through every iteration of the loop and store in r7
+		MOV r0, r7
+		MOV r1, r8
+		BL modulo	//Perform modulo to prevent numbers from getting too large
+		MOV r7, r0
+
 		SUB r6, r6, #1	//Reduce the value of the exponent by 1 for every advance through the loop
 
 		B StartLoop	//Branch again and go back to the beginning of the StartLoop procedure
@@ -45,8 +50,6 @@ pow:
 	EndLoop:		//Once the condition is met, end the loop and continue with the program
 
 		MOV r0, r7	//Move the value from r7 to r1
-		MOV r1, r8
-		BL modulo
 		B EndPow
 
 	ZeroExp:
@@ -59,7 +62,6 @@ pow:
 
 	EndPow:
 
-	LDR lr, [sp]
  	LDR lr, [sp, #0]
  	LDR r5, [sp, #4]
   	LDR r6, [sp, #8]
@@ -74,12 +76,11 @@ pow:
 .text
 
 gcd:
-	SUB sp, sp, #20
+	SUB sp, sp, #16
 	STR lr, [sp, #0]
 	STR r3, [sp, #4]
 	STR r4, [sp, #8]
 	STR r2, [sp, #12]
-	STR r6, [sp, #16]
 
 	CMP r0, r1
 	BEQ Equal			//Handle an instance when they are the same value
@@ -128,8 +129,7 @@ gcd:
 	LDR r3, [sp, #4]
 	LDR r4, [sp, #8]
 	LDR r2, [sp, #12]
-	LDR r5, [sp, #16]
-	ADD sp, sp, #20
+	ADD sp, sp, #16
 	MOV pc, lr
 
 .data
@@ -144,29 +144,49 @@ gcd:
 modulo:
  
 # Push the stack
-    SUB sp, sp, #8
+
+    SUB sp, sp, #20
     STR lr, [sp, #0]
-    STR r1, [sp, #4]
+    STR r2, [sp, #4]
+    STR r3, [sp, #8]
+    STR r5, [sp, #12]
+    STR r6, [sp, #16]
 
 # Perform division
-    MOV r5, r0            // Save dividend
+    MOV r5, r0            // Save r0, dividend
+    MOV r6, r1            // Save r1, divisor
     BL __aeabi_idiv       // Call division (quotient in r0)
 
+
 # Store the quotient
-    MOV r2, r0            // r2 = quotient
+	MOV r2, r0			// r2 = quotient
 
 # Multiply the quotient by the divisor
-    MOV r3, r2            // Ensure different register for MUL
-    MUL r2, r3, r1        // r2 = quotient * divisor
+
+	MOV r3, r2            // Ensure different register for MUL
+	MUL r2, r3, r6        // r2 = quotient * divisor
+
 
 # Subtract to get the remainder
-    SUB r0, r5, r2        // r0 = dividend - (quotient * divisor)
+	SUB r0, r5, r2			// r0 = dividend - (quotient * divisor)
+
+ # Ensure result is non-negative
+	CMP r0, #0
+	BGE skip_fix
+	ADD r0, r0, r1		// Make it positive if needed
+
+	skip_fix:
 
 # Pop the stack (and return to the OS)
+
     LDR lr, [sp, #0]
-    LDR r1, [sp, #4]
-    ADD sp, sp, #8
+    LDR r2, [sp, #4]
+    LDR r3, [sp, #8]
+    LDR r5, [sp, #12]
+    LDR r6, [sp, #16]
+    ADD sp, sp, #20
     MOV pc, lr
+
 
 .data
 //End modulo
@@ -337,39 +357,38 @@ found:
 .text
 encrypt:
 
-    //SUB sp, sp, #4
-    //STR lr, [sp]
+	SUB sp, sp, #4
+	STR lr, [sp]
 
-    // Compute m^e using pow
-    //BL pow              // result in r0
+	MOV r4, r0
+	MOV r8, r2
 
-    // r0 now has m^e
-    //MOV r1, r2
-    //BL modulo           // r0 = (m^e) mod n
+	// Compute m^e using pow
+	BL pow              // result in r0
 
-    // Return result in r0
-    //LDR lr, [sp]
-    //ADD sp, sp, #4
-    //MOV pc, lr
+	// Return result in r0
+	LDR lr, [sp]
+	ADD sp, sp, #4
+	MOV pc, lr
 
-    SUB sp, sp, #12
-    STR lr, [sp]
-    STR r2, [sp, #4]    @ Save n
-    STR r1, [sp, #8]    @ Save e
+	//SUB sp, sp, #12
+	//STR lr, [sp]
+	//STR r2, [sp, #4]    @ Save n
+	//STR r1, [sp, #8]    @ Save e
 
-    @ Compute m^e using pow
-    MOV r1, r1          @ exponent
-    MOV r0, r0          @ base
-    BL pow              @ result in r0
+	//@ Compute m^e using pow
+	//MOV r1, r1          @ exponent
+	//MOV r0, r0          @ base
+	//BL pow              @ result in r0
 
-    @ r0 now has m^e
-    LDR r1, [sp, #4]    @ r1 = n (modulus)
-    BL modulo           @ r0 = (m^e) mod n
+	//@ r0 now has m^e
+	//LDR r1, [sp, #4]    @ r1 = n (modulus)
+	//BL modulo           @ r0 = (m^e) mod n
 
-    @ Return result in r0
-    LDR lr, [sp]
-    ADD sp, sp, #12
-    MOV pc, lr
+	//@ Return result in r0
+	//LDR lr, [sp]
+	//ADD sp, sp, #12
+	//MOV pc, lr
 
 .data
 // END encrypt
@@ -452,31 +471,68 @@ isPrime:
 
 .text
 decrypt:
-
-    //
-    // Purpose: Decrypt an encrypted message using Private Key
-    // Input: 
-    //     r0 = cipher text (c) = %d
-    //     r1 = private key (d) = %d
-    //     r2 = p * q (n) = %d
-    // Output:
-    //     r0 = decrypted ascii character
-    // 
-
     // push stack record
-    SUB sp, sp, #4
-    STR lr, [sp]
+    SUB sp, sp, #24
+    STR lr, [sp, #0]
+    STR r4, [sp, #4]
+    STR r5, [sp, #8]
+    STR r6, [sp, #12]
+    STR r7, [sp, #16]
+    STR r3, [sp, #20]
 
-    // m = c^d mod n
-    BL pow  // r0 = c^d
-    MOV r1, r2
-    BL modulo // r0 = c^d mod n
+    // Purpose: decrypt a ciphertext using private key; result = (c^d) mod n
+    // Input:
+    //     r0 - ciphertext (c)
+    //     r1 - private key (d)
+    //     r2 - modulus (n)
+    // Output:
+    //     r0 - plaintext (m)
 
-    // pop stack record
-    LDR lr, [sp]
-    ADD sp, sp, #4
-    MOV pc, lr
+	MOV r3, r0          // r3 = ciphertext (c)
+	MOV r4, r1          // r4 = private key (d)
+	MOV r5, r2          // r5 = modulus (n)
+	MOV r6, #1          // r6 = result = 1 (initialize)
+
+	decrypt_loop:
+		CMP r4, #0          // if d == 0, end loop
+		BEQ decrypt_done
+
+		AND r7, r4, #1      // if (d & 1) check if the least significant bit is 1
+		CMP r7, #0
+		BEQ decrypt_skip_multiply
+
+		// Multiply result by base (ciphertext), then mod n
+		MUL r6, r6, r3      // r6 = result * ciphertext
+		MOV r0, r6          // r0 = result (dividend)
+		MOV r1, r5          // r1 = modulus (n)
+		BL modulo     // r0 = result mod n
+		MOV r6, r0
+
+	decrypt_skip_multiply:
+		// Square base (ciphertext), then mod n
+		MUL r3, r3, r3      // r3 = ciphertext * ciphertext
+		MOV r0, r3          // r0 = ciphertext (dividend)
+		MOV r1, r8          // r1 = modulus (n)
+		BL modulo     // r0 = ciphertext mod n
+		MOV r3, r0
+
+		// Right shift exponent by 1 (d = d // 2)
+		LSRS r4, r4, #1
+
+		B decrypt_loop      // Repeat the loop
+
+	decrypt_done:
+		MOV r0, r6          // Move final result into r0 (plaintext)
+
+	// pop stack record
+	LDR lr, [sp, #0]
+	LDR r4, [sp, #4]
+	LDR r5, [sp, #8]
+	LDR r6, [sp, #12]
+	LDR r7, [sp, #16]
+	LDR r3, [sp, #20]
+	ADD sp, sp, #24
+	MOV pc, lr          // return to caller
 
 .data
 // END decrypt
-
