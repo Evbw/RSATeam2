@@ -495,15 +495,15 @@ openFile:
 	SUB sp, sp, #4
     	STR lr, [sp, #0]
 
-	MOV r7, #5		//sys_open system call number
-	MOV r2, #0		//Flags: O_WRONLY (write only), O_CREAT (create if it doesn't exist)
-	LDR r3, =#0x1FF		//Permissions (rw-rw-rw-) for new files
-	SWI 0			//Make the system call
+	MOV r7, #5			//sys_open system call number
+	MOV r2, #65			//Flags: O_WRONLY (write only), O_CREAT (create if it doesn't exist)
+	LDR r3, =filePermissions	//Permissions (rw-rw-rw-) for new files
+	SWI 0				//Make the system call
 
-	CMP r0, #0		//Check for errors. If none, end the file
+	CMP r0, #0			//Check for errors. If none, end the file
 	BGE endOpenFile
 
-	MOV r0, #-1		//If less than 0, return -1 for the error
+	MOV r0, #-1			//If less than 0, return -1 for the error
 
 	endOpenFile:
 
@@ -512,6 +512,7 @@ openFile:
 	MOV pc, lr
 
 .data
+	filePermissions: .word 0x1FF
 //END openFile
 
 //Begin readFromFile
