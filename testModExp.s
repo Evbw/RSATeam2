@@ -9,8 +9,9 @@ main:
 	MOV r2, #551
 	BL modExp
 
-	MOV r1, r2
+	MOV r1, r0
 	LDR r0, =testOutput
+	BL printf
 
 	LDR lr, [sp, #0]
 	ADD sp, sp, #4
@@ -30,8 +31,6 @@ modExp:
 // r2 = modulus
 // Return:
 // r0 = (base^exponent) % modulus
-
-mod_exp:
     push {r1-r4, lr}        // Save registers we will use
     mov r3, #1              // r3 = result = 1
 
@@ -67,8 +66,4 @@ skip_multiply:
 mod_exp_done:
     mov r0, r3              // result -> r0
     pop {r1-r4, pc}         // restore and return
-
-
-.data
-
 
