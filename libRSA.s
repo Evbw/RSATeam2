@@ -262,12 +262,15 @@ cpubexp:
 
 cprivexp:
     // Push registers onto the stack
-    SUB sp, sp, #20
+    SUB sp, sp, #32
     STR lr, [sp, #0]
     STR r4, [sp, #4]
     STR r5, [sp, #8]
     STR r6, [sp, #12]
     STR r8, [sp, #16]
+    STR r7, [sp, #20]
+    STR r2, [sp, #24]
+    STR r3, [sp, #28]
 
     // Inputs:
     // r0 = e (public exponent)
@@ -311,6 +314,7 @@ find_x:
 
 found:
     MOV r0, r4            // Move d into r0 for return
+    MOV r1, r2            // Move x value to r1 for return
 
     // Pop registers and return
     LDR lr, [sp, #0]
@@ -318,7 +322,10 @@ found:
     LDR r5, [sp, #8]
     LDR r6, [sp, #12]
     LDR r8, [sp, #16]
-    ADD sp, sp, #20
+    LDR r7, [sp, #20]
+    LDR r2, [sp, #24]
+    LDR r3, [sp, #28]
+    ADD sp, sp, #32
     MOV pc, lr
 
 .data	
