@@ -72,9 +72,12 @@ pow:
 .text
 
 gcd:
-	SUB sp, sp, #8
+	SUB sp, sp, #20
 	STR lr, [sp, #0]
-	STR r1, [sp, #4]
+	STR r3, [sp, #4]
+	STR r4, [sp, #8]
+	STR r2, [sp, #12]
+	STR r6, [sp, #16]
 
 	CMP r0, r1
 	BEQ Equal			//Handle an instance when they are the same value
@@ -121,8 +124,11 @@ gcd:
 	EndGCD:
 
 	LDR lr, [sp, #0]
-	LDR r1, [sp, #4]
-	ADD sp, sp, #8
+	LDR r3, [sp, #4]
+	LDR r4, [sp, #8]
+	LDR r2, [sp, #12]
+	LDR r5, [sp, #16]
+	ADD sp, sp, #20
 	MOV pc, lr
 
 .data
