@@ -1,55 +1,120 @@
-#Author: Ayush Goel
-#purpose: to get the private key
-#input: e and totient
-#Output a binary output to say if the number is prime
-
+.global main
+.global modulo
 
 .text
-.global cprivexp
->>>>>>>>>>>
-cprivexp:
-    // Push stack frame
-    SUB sp, sp, #12
-    STR lr, [sp, #0]
-    STR r4, [sp, #4]
-    STR r5, [sp, #8]
 
-    MOV r4, r0          // r4 = totient Φ(n)
-    MOV r5, r1          // r5 = public exponent e
+main:
+	SUB sp, sp, #28
+	STR lr, [sp, #0]
+	STR r4, [sp, #4]
+	STR r5, [sp, #8]
+	STR r6, [sp, #12]
+	STR r7, [sp, #16]
+	STR r8, [sp, #20]
+	STR r9, [sp, #24]
 
-    MOV r2, #0          // x = 0
+	LDR r0, =prompt
+	BL printf
 
-find_x:
-    // temp = 1 + x * totient
-    MOV r0, r2          // r0 = x
-    MUL r0, r0, r4      // r0 = x * totient
-    ADD r0, r0, #1      // r0 = (x * totient) + 1
+	LDR r0, =input
+	LDR r1, =num
+	BL scanf
 
-    // check (temp mod e)
-    MOV r1, r5          // r1 = e
-    BL __aeabi_idivmod  // division: quotient in r0, remainder in r1
+	LDR r7, =input
+	LDR r7, [r7]
 
-    CMP r1, #0          // check if remainder == 0
-    BEQ found_x         // if yes, we found correct x
+	LDR r0, =prompt2
+	BL printf
 
-    ADD r2, r2, #1      // x = x + 1
-    B find_x            // repeat
+	LDR r0, =input
+	LDR r1, =num
+	BL scanf
 
-found_x:
-    // compute d = (1 + x * totient) / e
-    // temp = (1 + x * totient) is already calculated above
+	LDR r1, =input
+	LDR r1, [r1]
 
-    // temp is in r0 already (after MUL + ADD)
-    MOV r1, r5          // r1 = e
-    BL __aeabi_idiv     // r0 = temp / e
+	MOV r0, r7
+	
+	MOV r6, r0
+	MOV r6, r1
 
-    // r0 now holds d
+	MOV r2, #1
 
-    // Pop and return
-    LDR lr, [sp, #0]
-    LDR r4, [sp, #4]
-    LDR r5, [sp, #8]
-    ADD sp, sp, #12
-    MOV pc, lr
+findx:
+
+	MUL r3, r2, r7
+	ADD r4, r3, #1
+
+	MOV r0, r4
+	MOV r1, r6
+	BL modulo
+
+	CMP r0, #0
+	BEQ found
+
+	Add r2, r2, #1
+	B findx
+
+found:
+	MOV r0, r4
+	MOV r1, r6
+	BL __aeabi_idiv
+
+	MOV r1, r0
+
+	LDR r0, =output
+	BL printf
+	
+	LDR lr, [sp, #0]
+	LDR r4, [sp, #4]
+	LDR r5, [sp, #8]
+	LDR r6, [sp, #12]
+	LDR r7, [sp, #16]
+	LDR r8, [sp, #20]
+	STR r9, [sp, #24]
+	ADD sp, sp, #28
+	MOV pc, lr
 
 .data
+
+	prompt: .asciz "p<50:\n"
+	prompt2: .asciz "q<50:\n"
+	input: .asciz "%d"
+	num: .word 0
+	output: .asciz "r0 = %d and r1 = %d.\n"
+
+.text
+
+modulo:
+
+	SUB sp, sp, #28
+	STR lr, [sp, #0]
+	STR r4, [sp, #4]
+	STR r5, [sp, #8]
+	STR r6, [sp, #12]
+	STR r7, [sp, #16]
+	STR r8, [sp, #20]
+	STR r9, [sp, #24]
+
+	MOV r5, r0
+	BL __aeabi_idiv
+	
+	MOV r3, r0
+
+	MOV r2, r0
+	MUL r2, r3, r1
+
+	SUB r0, r5, r2
+
+
+	LDR lr, [sp, #0]
+	LDR r4, [sp, #4]
+	LDR r5, [sp, #8]
+	LDR r6, [sp, #12]
+	LDR r7, [sp, #16]
+	LDR r8, [sp, #20]
+	STR r9, [sp, #24]
+	ADD sp, sp, #28
+	MOV pc, lr
+.data
+
