@@ -217,7 +217,7 @@ main:
 	gcdPrompt2: .asciz "Please enter a second term:\n"
 	moduloPrompt: .asciz "Please enter a dividend:\n"
 	moduloPrompt2: .asciz "Please enter a divisor:\n"
-	cpubexpPrompt: .asciz "Requirement: p <50, p is prime. Please enter a value for p: \n"
+	cpubexpPrompt: .asciz "Requirement: p < 50, p is prime. Please enter a value for p: \n"
 	cpubexpPrompt2: .asciz "Requirement: q < 50, q is prime. Please enter a value for q: \n"
 	cprivexpPrompt: .asciz "Please enter value for public key (e): \n"
 	cprivexpPrompt2: .asciz "Please enter value for totient: \n"
