@@ -244,10 +244,10 @@ cpubexp:
 
 .data
 
-	prompt_exp: .asciz "Please enter a number that is between 1 and %d, positive, and coprime to %d:"
+	prompt_exp: .asciz "Please enter a number that is between 1 and %d, positive, and coprime to %d:\n"
 	exp_format:.asciz "%d"
 	input1: .word 0
-	error_msg: .asciz "your value does not match the specifications, please try again."
+	error_msg: .asciz "Your value for public key (e) does not match the specifications. Please try again.\n"
 //End cpubexp
 
 .text
