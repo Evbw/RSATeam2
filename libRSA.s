@@ -468,69 +468,52 @@ isPrime:
 
 .text
 decrypt:
-    // push stack record
-    SUB sp, sp, #24
-    STR lr, [sp, #0]
-    STR r4, [sp, #4]
-    STR r5, [sp, #8]
-    STR r6, [sp, #12]
-    STR r7, [sp, #16]
-    STR r3, [sp, #20]
 
-    // Purpose: decrypt a ciphertext using private key; result = (c^d) mod n
-    // Input:
-    //     r0 - ciphertext (c)
-    //     r1 - private key (d)
-    //     r2 - modulus (n)
-    // Output:
-    //     r0 - plaintext (m)
+// Arguments:
+// r0 = base
+// r1 = exponent
+// r2 = modulus
+// Return:
+// r0 = (base^exponent) % modulus
 
-    MOV r3, r0          // r3 = ciphertext (c)
-    MOV r4, r1          // r4 = private key (d)
-    MOV r5, r2          // r5 = modulus (n)
-    MOV r6, #1          // r6 = result = 1 (initialize)
+mod_exp:
+    push {r1-r4, lr}        // Save registers we will use
+    mov r3, #1              // r3 = result = 1
 
-decrypt_loop:
-    CMP r4, #0          // if d == 0, end loop
-    BEQ decrypt_done
+mod_exp_loop:
+    cmp r1, #0              // while exponent > 0
+    beq mod_exp_done
 
-    AND r7, r4, #1      // if (d & 1) check if the least significant bit is 1
-    CMP r7, #0
-    BEQ decrypt_skip_multiply
+    and r12, r1, #1         // if (exponent & 1)
+    cmp r12, #0
+    beq skip_multiply
 
-    // Multiply result by base (ciphertext), then mod n
-    MUL r6, r6, r3      // r6 = result * ciphertext
-    MOV r0, r6          // r0 = result (dividend)
-    MOV r1, r5          // r1 = modulus (n)
-    BL __aeabi_idiv     // r0 = result mod n
+    // result = (result * base) % modulus
+    mul r12, r3, r0         // r12 = result * base
+    mov r0, r12             // move numerator into r0 for division
+    mov r1, r2              // move denominator into r1 for division
+    bl __aeabi_idiv         // call software integer division (r0 = r0 / r1)
+    mul r4, r0, r2          // r4 = (quotient) * modulus
+    sub r3, r12, r4         // r3 = (result * base) - (quotient * modulus)
 
-decrypt_skip_multiply:
-    // Square base (ciphertext), then mod n
-    MUL r3, r3, r3      // r3 = ciphertext * ciphertext
-    MOV r0, r3          // r0 = ciphertext (dividend)
-    MOV r1, r5          // r1 = modulus (n)
-    BL __aeabi_idiv     // r0 = ciphertext mod n
+skip_multiply:
+    // base = (base * base) % modulus
+    mul r12, r0, r0         // r12 = base * base
+    mov r0, r12             // numerator
+    mov r1, r2              // denominator
+    bl __aeabi_idiv         // call software division
+    mul r4, r0, r2          // r4 = (quotient) * modulus
+    sub r0, r12, r4         // base = (base * base) - (quotient * modulus)
 
-    // Right shift exponent by 1 (d = d // 2)
-    LSRS r4, r4, #1
+    // exponent >>= 1
+    lsrs r1, r1, #1
+    b mod_exp_loop
 
-    B decrypt_loop      // Repeat the loop
+mod_exp_done:
+    mov r0, r3              // result -> r0
+    pop {r1-r4, pc}         // restore and return
 
-decrypt_done:
-    MOV r0, r6          // Move final result into r0 (plaintext)
-
-    // pop stack record
-    LDR lr, [sp, #0]
-    LDR r4, [sp, #4]
-    LDR r5, [sp, #8]
-    LDR r6, [sp, #12]
-    LDR r7, [sp, #16]
-    LDR r3, [sp, #20]
-    ADD sp, sp, #24
-    MOV pc, lr          // return to caller
 
 .data
 // END decrypt
-
-
 
