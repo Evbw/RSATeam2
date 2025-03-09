@@ -55,10 +55,10 @@ main:
 	MOV pc, lr
 
 .data
-	prompt1: .asciz "Please enter a term to take to a power:\n"
+	prompt1: .asciz "Please enter a term to take to a power:\n"	//Prompts for the user to input a term and power
 	prompt2: .asciz "Please enter an exponent:\n"
-	input: .asciz "%d"
-	num1: .word 0
+	input: .asciz "%d"						//Value to accept user input
+	num1: .word 0							//Value to store user input
 	num2: .word 0
-	output: .asciz "The result is %d\n"
+	output: .asciz "The result is %d\n"				//Output string
 	
