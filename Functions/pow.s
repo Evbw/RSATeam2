@@ -34,6 +34,11 @@ main:
 	LDR r0, [r0]		//Same as above, dereference and store the entered value in r0
 	MOV r6, r0		//And move to to r6
 
+	MOV r1, #0
+	CMP r6, r1
+	BEQ ZeroExp
+	BLE NegExp
+
 	StartLoop:		//Begin the loop!
 		CMP r6, #1	//Compare the exponent value to 1.
 		BLE EndLoop	//Branch it (B) and if the value in r6 is LESS THAN (L) or EQUAL (E) to 1, then move to EndLoop
@@ -45,10 +50,23 @@ main:
 
 	EndLoop:		//Once the condition is met, end the loop and continue with the program
 
-	MOV r1, r7		//Move the value from r7 to r1
+		MOV r1, r7	//Move the value from r7 to r1
+		B Output
 
-	LDR r0, =output		//Provide output to confirm the program is working
-	BL printf
+	ZeroExp:
+		MOV r1, #1
+		B Output
+	
+	NegExp:
+		LDR r0, =fraction
+		BL printf
+		B EndProgram
+
+	Output:
+		LDR r0, =output		//Provide output to confirm the program is working
+		BL printf
+
+	EndProgram:
 
 	LDR lr, [sp, #0]
 	ADD sp, sp, #4
@@ -58,6 +76,7 @@ main:
 	prompt1: .asciz "Please enter a term to take to a power:\n"	//Prompts for the user to input a term and power
 	prompt2: .asciz "Please enter an exponent:\n"
 	input: .asciz "%d"						//Value to accept user input
+	fraction: .asciz "That's a fraction, my man.\n"
 	num1: .word 0							//Value to store user input
 	num2: .word 0
 	output: .asciz "The result is %d\n"				//Output string
