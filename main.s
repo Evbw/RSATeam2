@@ -4,13 +4,6 @@
 // Purpose: Encrypt sender's message to be decrypted and read by receiver
 //
 
-//
-// TO DO
-// 1. Reading from and writing to .txt files; want to keep algorithm within
-// function or in main code?
-//
-
-
 .text
 .global main
 main:
@@ -18,27 +11,72 @@ main:
     SUB sp, sp, #4
     STR lr, [sp]
 
-    // Receiver generates public and private keys
+    // Request p, q from Receiver; ensure p and q meet requirements
+    // Loop for p value. p < 50
+    p_Loop:
+
+        LDR r0, =prompt1
+        BL printf
+        LDR r0, =format1
+        LDR r1, =pValue
+        BL scanf  // p stored in pValue
+
+        // Verify p
+        LDR r0, =pValue
+        LDR r0, [r0]
+        CMP r0, #0
+        BGT p_elsif1
+            // Statement if p <= 0
+            LDR r0, =p_ErrorMsg1
+            BL printf
+            B p_Loop
+        p_elsif1:
+            // Statement if 0 < p < 50
+            CMP r0, #50
+            BGE p_else
+            B endIf1
+        p_else:
+            LDR r0, =p_ErrorMsg1
+            BL printf
+            B p_Loop
+        endIf1:
+        
+        LDR r0, =debug
+        LDR r1, =pValue
+        LDR r1, [r1]
+        BL printf
+        // END Verify p
+
+
+    // Receiver generates public key
     // Function: cpubexp.s
-    // Input: p, q
-    // Store Outputs: n, e (public key), totient
+    // Inputs: r0 = p, r1 = q
+    // Output: r0 = e (public key), r1 = totient, r2 = n
+    // Store outputs
+    BL cpubexp
+
+
+    // Receiver generates private key
     // Function: cprivexp.s
-    // Input: x, e (public key), totient
-    // Store Outputs: d
+    // Input: r0 = e (public key), r1 = totient
+    // Output: r0 = d (private key)
+    // Store outputs
+    BL cprivexp
 
-    // Encrypt message using Public Key
+
+    // Request message to encrypt, using public key, from Sender
+    // for (character in message) { encrypt char and write in "encrypted.txt" }
     // Function: encrypt.s
-    // Purpose: Prompt Sender for message to be encrypted
-    // Inputs: Sender's message, e (public key), n
-    // Store Outputs: c (encrypted message on 'encrypted.txt')
-    // Write encrypted message to "encrypted.txt"
+    // Input: m (char from message), e (public key), n
+    // Output: c (ciphertext)
+    // Write ciphertext to "encrypted.txt"
 
-    // Decrypt message using Private Key
+    // Read from "encrypted.txt"
+    // for (cipher in "encrypted.txt") { decrypt and write in "plaintext.txt }
     // Function: decrypt.s
-    // Purpose: Read from "encrypted.s" and decrypt onto "plaintext.txt"
-    // Input: c (encrypted message), d (private key), n
-    // Output: Decrypted message on "plaintext.txt"
-    // Write decrypted message to "plaintext.txt"
+    // Input: c (ciphertext), d (private key), n
+    // Output: m (decrypted text)
+    // Write decrypted text to "plaintext.txt"
 
     // pop stack record
     LDR lr, [sp]
@@ -46,7 +84,12 @@ main:
     MOV pc, lr
 
 .data
-    prompt3: .asciz "Sender, enter message to send to the Receiver: "
-    buffer: .skip 100  // Sender message; reserve 100 bytes for a string
-    format3: .asciz "%s"
+    prompt1: .asciz "Receiver, input a positive value < 50 for p: \n"
+    prompt2: .asciz "Receiver, input a positive value < 50 for q: \n"
+    format1: .asciz "%d"
+    format2: .asciz "%d"
+    pValue: .word 0
+    qValue: .word 0
+    p_ErrorMsg1: .asciz "Invalid p value. Requirement: 0 < p < 50.\n"
+    debug: .asciz "Valid p value: %d.\n"
 
