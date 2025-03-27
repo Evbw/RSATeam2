@@ -1,21 +1,27 @@
 //
 // Program Name: decrypt.s
 // Purpose: Decrypt an encrypted message using Private Key
-// Input: Encrypted message in "encrypted.txt", d (private key), n
-// Output: Decrypted message on "plaintext.txt"
+// Input: 
+//     r0 = cipher text (c)
+//     r1 = private key (d)
+//     r2 = p * q (n)
+// Output:
+//     r0 = decrypted ascii character
 // 
 
+.global decrypt
+
 .text
-.global main
-main:
+decrypt:
+
     // push stack record
     SUB sp, sp, #4
     STR lr, [sp]
 
-    // Read from "encrypted.txt"
-
-    // Find 'm' and write to "plaintext.txt"
     // m = c^d mod n
+    BL pow  // r0 = c^d
+    MOV r1, r2
+    BL modulo // r0 = c^d mod n
 
     // pop stack record
     LDR lr, [sp]
@@ -23,4 +29,6 @@ main:
     MOV pc, lr
 
 .data
+
+// END decrypt
 
