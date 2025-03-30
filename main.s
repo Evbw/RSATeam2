@@ -71,9 +71,14 @@ main:
     // Output: c (ciphertext)
     // Write ciphertext to "encrypted.txt"
 
-    // Read from "encrypted.txt"
-    // for (cipher in "encrypted.txt") { decrypt and write in "plaintext.txt }
-    // Function: decrypt.s
+    LDR r0, =decryptPrompt	// Read from "encrypted.txt"
+    BL printf			// for (cipher in "encrypted.txt") { decrypt and write in "plaintext.txt }
+    
+    LDR r0, =decryptFormat
+    LDR r1, =decryptInput
+    BL scanf
+
+				// Function: decrypt.s
     // Input: c (ciphertext), d (private key), n
     // Output: m (decrypted text)
     // Write decrypted text to "plaintext.txt"
@@ -86,10 +91,13 @@ main:
 .data
     prompt1: .asciz "Receiver, input a positive value < 50 for p: \n"
     prompt2: .asciz "Receiver, input a positive value < 50 for q: \n"
-    format1: .asciz "%d"
+    decryptPrompt: .asciz "Please enter the name of the file to be decrypted:\n"
+    format1: .asciz "%d" 
     format2: .asciz "%d"
+    decryptFormat: .asciz "%s"
     pValue: .word 0
     qValue: .word 0
+    decryptInput: .word 100
     p_ErrorMsg1: .asciz "Invalid p value. Requirement: 0 < p < 50.\n"
     debug: .asciz "Valid p value: %d.\n"
 
