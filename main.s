@@ -23,8 +23,17 @@ main:
 
         // Verify p
         LDR r0, =pValue
-        LDR r0, [r0]
-        CMP r0, #0
+        LDR r9, [r0]// putting the value in r9 to preserve the input
+	BL isPrime //calling a function check if the number is prime
+	CMP r0, #0
+	BNE p_elsif2
+		LDR r0, =p_ErrorMsg2
+		BL printf
+		B p_Loop
+
+	p_elsif2:
+	
+        CMP r9, #0
         BGT p_elsif1
             // Statement if p <= 0
             LDR r0, =p_ErrorMsg1
@@ -32,7 +41,7 @@ main:
             B p_Loop
         p_elsif1:
             // Statement if 0 < p < 50
-            CMP r0, #50
+            CMP r9, #50
             BGE p_else
             B endIf1
         p_else:
@@ -100,4 +109,6 @@ main:
     decryptInput: .word 100
     p_ErrorMsg1: .asciz "Invalid p value. Requirement: 0 < p < 50.\n"
     debug: .asciz "Valid p value: %d.\n"
+    p_ErrorMsg2: .asciz "The Number is not prime.
+
 
