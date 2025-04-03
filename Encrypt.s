@@ -19,9 +19,9 @@ encrypt:
 	STR lr, [sp]
 
 	# c = m^e
-	BL pow  // r0 = m^e
+	BL pow				@ r0 = m^e
 	MOV r1, r2
-	BL modulo // r0 = m^e mod n
+	BL modulo			@ r0 = m^e mod n
 
 	# pop stack record
 	LDR lr, [sp]
