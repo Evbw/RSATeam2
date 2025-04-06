@@ -187,7 +187,7 @@ cpubexp:
 		BGT Error_msg
 			CMP r0, r5 // Check to see input is less than totient
 			BLT Error_msg
-				BL isPrime//checking if the input is prime
+				B isPrime//checking if the input is prime
 				CMP r0, #0
 				BNE Error_msg
 					MOV r0, r11
@@ -225,53 +225,46 @@ cpubexp:
 
 
 isPrime:
-	SUB sp, sp, #16
+	
+	//push stack record
+	SUB sp, sp, #8
 	STR lr, [sp, #0]
-	STR r5, [sp, #4]
-	STR r6, [sp, #8]
-	STR r7, [sp, #12]
 
-	MOV r5, r0			//Divide by 2 for easy comparison of divisors
-	MOV r1, #2
-	BL __aeabi_idiv
-	MOV r6, r0			//Move the resulting value into r6
+	MOV r9, r0
+	MOV r1, #2	//check if the number is less than 2
+	MOV r2, #2	// counter
+		
+	CMP r0, r1
+	BLT error_1
 
-	MUL r0, r6, r1
-	CMP r0, r5
-	BEQ NotPrime
-	MOV r4, #0
-	MOV r4, r6
+	prime_loop:
 
-	CheckDivisor:
-		MOV r0, r5
-		MOV r1, r4
-		BL __aeabi_idiv
+		CMP r0, r2
+		BEQ y_prime
+			
+		MOV r0, r9
+		MOV r1, r2
+		BL modulo
+			
+		CMP r0, #0
+		BEQ error_1 //not prime
+			
 
-		MOV r2, r0
-		MUL r2, r2, r4
-		SUB r2, r5, r2
-		CMP r2, #0
-		BEQ NotPrime
+		ADD r2, r2, #1
+		B prime_loop
 
-		ADD r4, r4, #-1
-		CMP r4, #1
-		BEQ Prime
-		B CheckDivisor		
-
-	Prime:
+	y_prime:
 		MOV r0, #0
+		B doneP
 
-	NotPrime:
+	error_1:
 		MOV r0, #1
-
-	End:
+		
+	doneP:
 
 	LDR lr, [sp, #0]
-	LDR r5, [sp, #4]
-	LDR r6, [sp, #8]
-	LDR r7, [sp, #12]
-	ADD sp, sp, #16
+	ADD sp, sp, #8
 	MOV pc, lr
 
-.data
+.data			
 //End isPrime
