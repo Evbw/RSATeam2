@@ -22,7 +22,9 @@ main:
 	CMP r0, #1
 	BLE powLib
 	CMP r0, #2
-	BGE gcdLib
+	BEQ gcdLib
+	CMP r0, #3
+	BEQ moduloLib
 
 	powLib:
 		LDR r0, =powPrompt
@@ -85,6 +87,35 @@ main:
 		BL printf
 		B MenuLoop		
 	
+	moduloLib:
+
+		LDR r0, =moduloPrompt
+		BL printf
+
+		LDR r0, =input
+		LDR r1, =num
+		BL scanf
+
+		LDR r7, =num
+		LDR r7, [r7]
+
+		LDR r0, =moduloPrompt2
+		BL printf
+	
+		LDR r0, =input
+		LDR r1, =num
+		BL scanf
+
+		LDR r1, =num
+		LDR r1, [r1]
+
+		MOV r0, r7
+		BL modulo
+		MOV r1, r0
+
+		LDR r0, =moduloOutput
+		BL printf
+	
 	EndProgram:
 
 	LDR lr, [sp]
@@ -92,13 +123,16 @@ main:
 	MOV pc, lr
 
 .data
-	prompt: .asciz "Please choose to create either a power (1) or find the greatest common denominator (2), or exit with (-1):\n"
+	prompt: .asciz "Please choose to create a power (1), find the greatest common denominator (2), find the modulus (3), or exit with (-1):\n"
 	powPrompt: .asciz "Please enter a number:\n"
 	powPrompt2: .asciz "Please enter an exponent:\n"
 	gcdPrompt: .asciz "Please enter a term:\n"
 	gcdPrompt2: .asciz "Please enter a second term:\n"
+	moduloPrompt: .asciz "Please enter a dividend:\n"
+	moduloPrompt2: .asciz "Please enter a divisor:\n"
 	input: .asciz "%d"
 	num: .word 0
 	powOutput: .asciz "The result is %d.\n"
 	gcdOutput: .asciz "The greatest common denominator is %d.\n"
+	moduloOutput: .asciz "The modulus is %d.\n"
 	
