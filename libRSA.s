@@ -1,5 +1,18 @@
+#
+# File name: libRSA
+# Authors: Ayush Goel, Calvin Tang, Conner Wright, Everett Bowline
+# Purpose: Serves as the library function for the main RSA program
+#
+
+
 .global pow
 .global gcd
+.global modulo
+.global cpubexp
+.global cprivexp
+.global encrypt
+.global decrypt
+.global isPrime
 
 .text
 
@@ -102,3 +115,156 @@ gcd:
 .data
 	
 //End gcd
+
+.text
+# NOTES 
+# r0 = dividend
+# r1 = divisor
+# Return: r0 = result of (dividend % divisor)
+modulo:
+
+	# Push the stack
+	SUB sp, sp, #8
+	STR lr, [sp, #0]
+
+	MOV r5, r0
+	# Perform division
+	BL __aeabi_idiv					//Call aeabi_div(dividend, divisor) and return quotient in r0
+
+	# Store the quotient
+	MOV r2, r0					//r2 = quotient (returned by aeabi_div)
+
+	# Multiply the quotient by the divisor
+	MUL r2, r2, r1					//r2 = quotient * divisor
+
+	# Subtract to get the remainder
+	SUB r0, r5, r2					//r0 = dividend - (divisor * quotient)
+
+	# Pop the stack (and return to the OS)
+	LDR lr, [sp, #0]
+	ADD sp, sp, #8
+	MOV pc, lr
+
+.data
+	debug: .asciz "%d\n"
+//End modulo
+
+cpubexp:
+
+	SUB sp, sp, #8
+	STR lr, [sp]
+
+	MOV r10, r0 //moving p and q to ensure that values are preserved
+	MOV r9, r1 
+
+	# calculating N
+	
+	MUL r8, r9, r10
+	
+	# calculating totient
+
+	SUB r7, r10, #1
+	SUB r6 ,r9, #1
+	MUL r5, r6, r7 //totient
+
+
+	exp_loop:
+
+	LDR r0, =prompt_exp
+	BL printf
+
+	LDR r0, =exp_format
+	LDR r1, =input1
+	BL scanf
+	
+	LDR r1, =input1
+	LDR r0, [r1]
+	MOV r11, r0
+	
+	CMP r0, #0 // check to see if the number is positive
+	BGT Error_msg
+		CMP r0, #1 // check to see if input is greater than 1
+		BGT Error_msg
+			CMP r0, r5 // Check to see input is less than totient
+			BLT Error_msg
+				B isPrime//checking if the input is prime
+				CMP r0, #0
+				BNE Error_msg
+					MOV r0, r11
+					MOV r1, r5
+					BL gcd //chekcing if input is comprime to totient
+					CMP r0, #1
+					BNE Error_msg
+						B done
+
+
+	Error_msg:
+		
+		LDR r0, =error_msg
+		BL printf
+		B exp_loop
+
+	done:
+	
+	MOV r0, r11
+	MOV r1, r5
+	MOV r2, r8
+
+	LDR lr, [sp]
+	ADD sp, sp, #4
+	MOV pc, lr
+
+
+.data
+
+	prompt_exp: .asciz "Please enter a number that is: \n between 1 and %d \npositive \n prime \n coprime to %d:"
+	exp_format:.asciz "%d"
+	input1: .word 0
+	error_msg: .asciz "your value does not match the specifications, please try again."
+//End cpubexp
+
+
+isPrime:
+	
+	//push stack record
+	SUB sp, sp, #8
+	STR lr, [sp, #0]
+
+	MOV r9, r0
+	MOV r1, #2	//check if the number is less than 2
+	MOV r2, #2	// counter
+		
+	CMP r0, r1
+	BLT error_1
+
+	prime_loop:
+
+		CMP r0, r2
+		BEQ y_prime
+			
+		MOV r0, r9
+		MOV r1, r2
+		BL modulo
+			
+		CMP r0, #0
+		BEQ error_1 //not prime
+			
+
+		ADD r2, r2, #1
+		B prime_loop
+
+	y_prime:
+		MOV r0, #0
+		B doneP
+
+	error_1:
+		MOV r0, #1
+		
+	doneP:
+
+	LDR lr, [sp, #0]
+	ADD sp, sp, #8
+	MOV pc, lr
+
+.data			
+//End isPrime
