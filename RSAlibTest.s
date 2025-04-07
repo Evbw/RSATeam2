@@ -160,8 +160,8 @@ main:
 		LDR r1, =num
 		BL scanf
 
-		LDR r1, =num
-		LDR r1, [r1]
+		LDR r0, =num
+		LDR r0, [r0]
 		BL isPrime
 
 		MOV r1, r0
@@ -172,7 +172,7 @@ main:
 	EndProgram:
 
 	LDR lr, [sp]
-	ADD sp, sp, #4
+	ADD sp, sp, #8
 	MOV pc, lr
 
 .data
@@ -192,5 +192,4 @@ main:
 	gcdOutput: .asciz "The greatest common denominator is %d.\n"
 	moduloOutput: .asciz "The modulus is %d.\n"
 	cpubexpLibOutput: .asciz "The public exponent is %d.\n"
-	isprimeOutput: .asciz "If it is 1, it's not prime. If it's 0, it is prime: %d\n"
-	
+	isprimeOutput: .asciz "If it is zero, it's not prime. If it's one, it is prime: %d\n"
