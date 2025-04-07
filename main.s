@@ -12,7 +12,7 @@ main:
     STR lr, [sp]
 
     // Request p, q from Receiver; ensure p and q meet requirements
-    // Loop for p value. p < 50
+    // Loop for p value. p must be prime and < 50.
     p_Loop:
 
         LDR r0, =prompt1
@@ -21,7 +21,7 @@ main:
         LDR r1, =pValue
         BL scanf  // p stored in pValue
 
-        // Verify p
+        // Verify 0 < p < 50
         LDR r0, =pValue
         LDR r9, [r0]// putting the value in r9 to preserve the input
 	BL isPrime //calling a function check if the number is prime
@@ -49,28 +49,65 @@ main:
             BL printf
             B p_Loop
         endIf1:
+
+        // Verify p is prime
         
-        LDR r0, =debug
+
+        LDR r0, =debug1
         LDR r1, =pValue
         LDR r1, [r1]
         BL printf
-        // END Verify p
 
+    // Loop for q value. q must be prime and < 50.
+    q_Loop:
+
+        LDR r0, =prompt2
+        BL printf
+        LDR r0, =format2
+        LDR r1, =qValue
+        BL scanf  // q stored in qValue
+
+        // Verify q
+        LDR r0, =qValue
+        LDR r0, [r0]
+        CMP r0, #0
+        BGT q_elsif1
+            // Statement if q <= 0
+            LDR r0, =q_ErrorMsg1
+            BL printf
+            B q_Loop
+        q_elsif1:
+            // Statement if 0 < q 50
+            CMP r0, #50
+            BGE q_else
+            B endIf2
+        q_else:
+            LDR r0, =q_ErrorMsg1
+            BL printf
+            B q_Loop
+        endIf2:
+
+        LDR r0, =debug2
+        LDR r1, =qValue
+        LDR r1, [r1]
+        BL printf
+        // END Verify q
+        
 
     // Receiver generates public key
     // Function: cpubexp.s
     // Inputs: r0 = p, r1 = q
     // Output: r0 = e (public key), r1 = totient, r2 = n
+    // BL cpubexp
     // Store outputs
-    BL cpubexp
 
 
     // Receiver generates private key
     // Function: cprivexp.s
     // Input: r0 = e (public key), r1 = totient
     // Output: r0 = d (private key)
+    // BL cprivexp
     // Store outputs
-    BL cprivexp
 
 
     // Request message to encrypt, using public key, from Sender
@@ -98,17 +135,19 @@ main:
     MOV pc, lr
 
 .data
-    prompt1: .asciz "Receiver, input a positive value < 50 for p: \n"
-    prompt2: .asciz "Receiver, input a positive value < 50 for q: \n"
-    decryptPrompt: .asciz "Please enter the name of the file to be decrypted:\n"
-    format1: .asciz "%d" 
+
+    prompt1: .asciz "Receiver, input a positive prime value < 50 for p: \n"
+    prompt2: .asciz "Receiver, input a positive prime value < 50 for q: \n"
+    format1: .asciz "%d"
+    decryptPrompt: .asciz "Please enter the name of the file to be decrypted:\n" 
+
     format2: .asciz "%d"
     decryptFormat: .asciz "%s"
     pValue: .word 0
     qValue: .word 0
     decryptInput: .word 100
     p_ErrorMsg1: .asciz "Invalid p value. Requirement: 0 < p < 50.\n"
-    debug: .asciz "Valid p value: %d.\n"
-    p_ErrorMsg2: .asciz "The Number is not prime.
-
+    q_ErrorMsg1: .asciz "Invalud q value. Requirement: 0 < q < 50.\n"
+    debug1: .asciz "Valid p value: %d.\n"
+    debug2: .asciz "Valid q value: %d.\n"
 
