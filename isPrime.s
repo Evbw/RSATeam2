@@ -1,5 +1,6 @@
 .text
 .global main
+
 main:
     // push stack record
     SUB sp, sp, #4
@@ -8,6 +9,13 @@ main:
     // Function dictionary
     // r4 - number for prime check
     // r5 - divisor
+
+	LDR r0, =input
+	LDR r1, =num
+	BL scanf
+
+	LDR r0, =num
+	LDR r0, [r0]
 
     // Check if prime
     MOV r4, r0
@@ -45,10 +53,14 @@ main:
         B else
 
         Prime:
-            MOV r0, #1
+            MOV r1, #1
+		LDR r0, =pout
+		BL printf
             B endIf1
         notPrime: 
-            MOV r0, #0
+            MOV r1, #0
+		LDR r0, =npout
+		BL printf
            B endIf1
 
     endIf1:
@@ -58,6 +70,8 @@ main:
     ADD sp, sp, #4
     MOV pc, lr
 
-
 .data
-
+	input: .asciz "%d"
+	num: .word 0
+	pout: .asciz "%d"
+	npout: .asciz "%d"
