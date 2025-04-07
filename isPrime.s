@@ -1,62 +1,63 @@
-#Author: Ayush Goel
-#purpose: To see if a number is prime
-#input: P and Q
-#Output a binary output to say if the number is prime
-
-
 .text
-.global isPrime
+.global main
+main:
+    // push stack record
+    SUB sp, sp, #4
+    STR lr, [sp]
 
-isPrime:
-	
-	//push stack record
-	SUB sp, sp, #4
-	STR lr, [sp]
+    // Function dictionary
+    // r4 - number for prime check
+    // r5 - divisor
 
-	MOV r0, r9
-	MOV r1, #2//check if the number is less than 2
-	MOV r2, #2// counter
-		
+    // Check if prime
+    MOV r4, r0
+    MOV r5, #2
 
-		CMP r0, r1
-		BLT error_1
+    CMP r4, #2
+    BNE elsif1
+        // Statement if r4 == 2
+        MOV r0, #1
+        B endIf1
+    elsif1:
+        CMP r4, #2
+        BGT else
+        // Statement if r4 < 2
+        MOV r0, #0
+        B endIf1
+    else:
+        // Statement if r4 > 2
+        MUL r1, r5, r5
+        CMP r1, r4
+        BGT Prime
 
-			prime_loop:
+        // r0 = number for prime check
+        // r1 = divisor
+        MOV r0, r4
+        MOV r1, r5
+        BL __aeabi_idiv
+        // r0 = divided result
+        MUL r2, r0, r1
+        SUB r3, r4, r2
+        CMP r3, #0
+        BEQ notPrime
 
-			CMP r0, r2
-			BEQ y_prime
-			
-			MOV r5,r0
-			MOV r6,r2
-			BL __aeabi_idiv
-			SUB r7, r5, r0
-			
-			CMP r7, #0
-			BEQ error_2 //not prime
-			
+        ADD r5, r5, #1
+        B else
 
-			ADD r2, r2, #1
-			B prime_loop
+        Prime:
+            MOV r0, #1
+            B endIf1
+        notPrime: 
+            MOV r0, #0
+           B endIf1
 
-		y_prime:
-			LDR r0, #1
-			B done
+    endIf1:
 
-		error_1:
-			LDR r0, #0
-		
-	done:
+    // pop stack record
+    LDR lr, [sp]
+    ADD sp, sp, #4
+    MOV pc, lr
 
-	LDR lr, [sp]
-	ADD sp, sp, #4
-	MOV pc, lr
 
 .data
 
-
-		
-		
-			
-	
-
-	

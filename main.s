@@ -24,7 +24,7 @@ main:
         // Verify 0 < p < 50
         LDR r0, =pValue
         LDR r9, [r0]// putting the value in r9 to preserve the input
-	BL isPrime //calling a function check if the number is prime
+	// BL isPrime //calling a function check if the number is prime
 	CMP r0, #0
 	BNE p_elsif2
 		LDR r0, =p_ErrorMsg2
@@ -135,12 +135,17 @@ main:
     MOV pc, lr
 
 .data
-
+    prompt1: .asciz "Receiver, input a positive prime value < 50 for p: \n"
+    prompt2: .asciz "Receiver, input a positive prime value < 50 for q: \n"
+    format1: .asciz "%d"
+    prompt1: .asciz "Receiver, input a positive value < 50 for p: \n"
+    prompt2: .asciz "Receiver, input a positive value < 50 for q: \n"
+    decryptPrompt: .asciz "Please enter the name of the file to be decrypted:\n"
+    format1: .asciz "%d"
     prompt1: .asciz "Receiver, input a positive prime value < 50 for p: \n"
     prompt2: .asciz "Receiver, input a positive prime value < 50 for q: \n"
     format1: .asciz "%d"
     decryptPrompt: .asciz "Please enter the name of the file to be decrypted:\n" 
-
     format2: .asciz "%d"
     decryptFormat: .asciz "%s"
     pValue: .word 0
@@ -150,4 +155,5 @@ main:
     q_ErrorMsg1: .asciz "Invalud q value. Requirement: 0 < q < 50.\n"
     debug1: .asciz "Valid p value: %d.\n"
     debug2: .asciz "Valid q value: %d.\n"
-
+    debug: .asciz "Valid p value: %d.\n"
+    p_ErrorMsg2: .asciz "The Number is not prime.\n"
