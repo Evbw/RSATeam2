@@ -146,8 +146,9 @@ modulo:
 	MOV pc, lr
 
 .data
-	debug: .asciz "%d\n"
 //End modulo
+
+.text
 
 cpubexp:
 
@@ -187,7 +188,7 @@ cpubexp:
 		BGT Error_msg
 			CMP r0, r5 // Check to see input is less than totient
 			BLT Error_msg
-				B isPrime//checking if the input is prime
+				BL isPrime//checking if the input is prime
 				CMP r0, #0
 				BNE Error_msg
 					MOV r0, r11
@@ -223,48 +224,64 @@ cpubexp:
 	error_msg: .asciz "your value does not match the specifications, please try again."
 //End cpubexp
 
+.text
 
 isPrime:
 	
 	//push stack record
 	SUB sp, sp, #8
-	STR lr, [sp, #0]
+    	STR lr, [sp, #0]
 
-	MOV r9, r0
-	MOV r1, #2	//check if the number is less than 2
-	MOV r2, #2	// counter
-		
-	CMP r0, r1
-	BLT error_1
+	// Function dictionary
+	// r4 - number for prime check
+	// r5 - divisor
 
-	prime_loop:
+	// Check if prime
+	MOV r4, r0
+	MOV r5, #2
 
-		CMP r0, r2
-		BEQ y_prime
-			
-		MOV r0, r9
-		MOV r1, r2
-		BL modulo
-			
-		CMP r0, #0
-		BEQ error_1 //not prime
-			
+	CMP r4, #2
+	BNE elsif1
+        // Statement if r4 == 2
+        	MOV r0, #1
+	        B endIf1
+	elsif1:
+        	CMP r4, #2
+	        BGT else
+        // Statement if r4 < 2
+        	MOV r0, #0
+	        B endIf1
+	else:
+        // Statement if r4 > 2
+		MUL r1, r5, r5
+	        CMP r1, r4
+        	BGT Prime
 
-		ADD r2, r2, #1
-		B prime_loop
+        // r0 = number for prime check
+        // r1 = divisor
+	        MOV r0, r4
+        	MOV r1, r5
+	        BL __aeabi_idiv
+        // r0 = divided result
+        	MUL r2, r0, r1
+	        SUB r3, r4, r2
+        	CMP r3, #0
+	        BEQ notPrime
 
-	y_prime:
-		MOV r0, #0
-		B doneP
+        	ADD r5, r5, #1
+	        B else
 
-	error_1:
-		MOV r0, #1
-		
-	doneP:
+        Prime:
+        	MOV r0, #1
+        	B endIf1
+        notPrime: 
+        	MOV r0, #0
+        	B endIf1
+
+	endIf1:
 
 	LDR lr, [sp, #0]
 	ADD sp, sp, #8
 	MOV pc, lr
-
-.data			
+.data
 //End isPrime
