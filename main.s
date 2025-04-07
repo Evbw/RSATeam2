@@ -142,6 +142,10 @@ main:
     prompt2: .asciz "Receiver, input a positive value < 50 for q: \n"
     decryptPrompt: .asciz "Please enter the name of the file to be decrypted:\n"
     format1: .asciz "%d"
+    prompt1: .asciz "Receiver, input a positive prime value < 50 for p: \n"
+    prompt2: .asciz "Receiver, input a positive prime value < 50 for q: \n"
+    format1: .asciz "%d"
+    decryptPrompt: .asciz "Please enter the name of the file to be decrypted:\n" 
     format2: .asciz "%d"
     decryptFormat: .asciz "%s"
     pValue: .word 0
@@ -152,4 +156,4 @@ main:
     debug1: .asciz "Valid p value: %d.\n"
     debug2: .asciz "Valid q value: %d.\n"
     debug: .asciz "Valid p value: %d.\n"
-    p_ErrorMsg2: .asciz "The Number is not prime.
+    p_ErrorMsg2: .asciz "The Number is not prime.\n"
