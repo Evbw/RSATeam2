@@ -117,6 +117,120 @@ main:
     // Output: c (ciphertext)
     // Write ciphertext to "encrypted.txt"
 
+
+@ ----- START ENCRYPT SECTION -----
+@ I started doing this then realized you're already requesting stuff above, so I was a little confused as to what I should be requesting here.
+	# Request a message to encrypt using a public key the from Sender
+	LDR r0, =messagePrompt			@ Message prompt to display
+	BL printf				@ Print the prompt for message input
+	LDR r0, =messageBuffer			@ Where the message will be stored
+	LDR r1, =messageLength			@ Max length of message input
+	BL scanf				@ Read message from sender
+
+	# Loop through each character of the message
+	LDR r2, =messageBuffer			@ Load address of message buffer
+	LDR r3, =messageLength			@ Load max length of message
+	MOV r4, #0				@ Index for iterating through message
+
+encrypt_loop:
+	# Load the current character from the message
+	LDRB r1, [r2, r4]			@ Load the current character (m)
+	CMP r1, #0				@ Check if we reached the end of the string (null terminator)
+	BEQ encrypt_done			@ If null terminator, finish encryption loop
+
+	# Encrypt the character m using RSA: c = m^e % n
+	# Call the encrypt function with m (r1), e (r5), n (r6)
+	MOV r0, r1				@ Move m to r0 (input to encrypt function)
+	MOV r1, r5				@ Move e (public key) to r1
+	MOV r2, r6				@ Move n (modulus) to r2
+	BL encrypt				@ Encrypt m (r1) with e (r5) and n (r6)
+
+	# Store result (ciphertext) in r0 (which now contains the result from encrypt function)
+	MOV r3, r0				@ r0 now holds the ciphertext c
+
+	# Write the ciphertext to the "encrypted.txt" file
+	LDR r0, =ciphertextFile			@ Load the filename to write
+	LDR r1, =fileWriteMode			@ File write mode (could be binary or text)
+	BL openFile				@ Open the file
+
+	MOV r0, r3				@ Prepare the ciphertext for writing
+	BL writeToFile 				@ Write the ciphertext to file
+
+	# Increment the index to move to the next character
+	ADD r4, r4, #1
+	B encrypt_loop				@ Repeat for the next character
+
+encrypt_done:
+	# Close the file after writing
+	LDR r0, =ciphertextFile
+	BL closeFile				@ Close the file
+@ ----- END FILE SECTION -----
+
+
+@ ----- START FILE SECTION -----
+@ Function: openFile
+@ Input: r0 = file name (pointer to string)
+@        r1 = file mode (e.g., O_WRONLY, O_CREAT)
+@ Output: r0 = file descriptor (or -1 if error)
+openFile:
+	MOV r7, #5				@ sys_open system call number
+	MOV r2, #0				@ Flags: O_WRONLY (write only), O_CREAT (create if doesn't exist)
+	MOV r3, #0x1FF				@ Permissions (rw-rw-rw-), typically for new files
+	SWI 0					@ Make the system call
+
+	# Check for errors (negative value indicates an error)
+	CMP r0, #0				@ If file descriptor is less than 0, there was an error
+	BLT openFile_error
+
+	# File opened successfully, return file descriptor
+	BX lr
+
+openFile_error:
+	MOV r0, #-1				@ Return -1 on error
+	BX lr
+	
+	
+@ Function: writeToFile
+@ Input: r0 = file descriptor (from openFile)
+@        r1 = pointer to data (ciphertext)
+@        r2 = number of bytes to write
+writeToFile:
+	MOV r7, #4				@ sys_write system call number
+	SWI 0					@ Make the system call
+
+	# Check for errors (negative value indicates an error)
+	CMP r0, #0 				@ If the return value is less than 0, there was an error
+	BLT writeToFile_error
+
+	# Return number of bytes written (r0 contains the number of bytes written)
+	BX lr
+
+writeToFile_error:
+	MOV r0, #-1				@ Return -1 on error
+	BX lr
+	
+	
+@ Function: closeFile
+@ Input: r0 = file descriptor (from openFile)
+@ Output: r0 = 0 if successful, -1 on error
+closeFile:
+	MOV r7, #6				@ sys_close system call number
+	SWI 0					@ Make the system call
+
+	# Check for errors (negative value indicates an error)
+	CMP r0, #0				@ If the return value is less than 0, there was an error
+	BLT closeFile_error
+
+	# File closed successfully
+	MOV r0, #0 				@ Return 0 to indicate success
+	BX lr
+
+closeFile_error:
+	MOV r0, #-1				@ Return -1 on error
+	BX lr
+@ ----- END FILE SECTION -----
+
+
     LDR r0, =decryptPrompt	// Read from "encrypted.txt"
     BL printf			// for (cipher in "encrypted.txt") { decrypt and write in "plaintext.txt }
     
@@ -157,3 +271,8 @@ main:
     debug2: .asciz "Valid q value: %d.\n"
     debug: .asciz "Valid p value: %d.\n"
     p_ErrorMsg2: .asciz "The Number is not prime.\n"
+
+@ ----- .data for the Encrypt section ----
+	messagePrompt: .asciz "Please enter the message to encrypt: \n"		@ Prompt user to enter a message
+	messageBuffer: .space 100						@ Space to store the message (up to 100 characters)
+	messageLength: .word 100						@ Maximum length for the message
