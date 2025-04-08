@@ -164,7 +164,7 @@ encrypt_done:
 	# Close the file after writing
 	LDR r0, =ciphertextFile
 	BL closeFile				@ Close the file
-@ ----- END FILE SECTION -----
+@ ----- END ENCRYPT SECTION -----
 
 
 @ ----- START FILE SECTION -----
