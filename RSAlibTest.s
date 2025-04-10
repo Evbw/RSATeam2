@@ -28,6 +28,8 @@ main:
 	CMP r0, #4
 	BEQ cpubexpLib
 	CMP r0, #5
+	BEQ cprivexpLib
+	CMP r0, #6
 	BEQ isPrimeLib
 
 	powLib:
@@ -151,6 +153,35 @@ main:
 		BL printf
 		B MenuLoop
 
+	cprivexpLib:
+
+		LDR r0, =cpubexpPrompt
+		BL printf
+
+		LDR r0, =input
+		LDR r1, =num
+		BL scanf
+
+		LDR r7, =num
+		LDR r7, [r7]
+
+		LDR r0, =cpubexpPrompt2
+		BL printf
+	
+		LDR r0, =input
+		LDR r1, =num
+		BL scanf
+
+		MOV r0, r7
+
+		LDR r1, =num
+		LDR r1, [r1]
+		BL cprivexp
+
+		LDR r0, =cprivexpOutput
+		BL printf
+		B MenuLoop
+
 	isPrimeLib:
 
 		LDR r0, =isprimePrompt
@@ -176,7 +207,7 @@ main:
 	MOV pc, lr
 
 .data
-	prompt: .asciz "Please choose to create a power (1), find the greatest common denominator (2), find the modulus (3), create a public exponent (4), check if a number is prime (5), or exit with (-1):\n"
+	prompt: .asciz "Please choose to create a power (1), find the greatest common denominator (2), find the modulus (3), create a public exponent (4), create a private exponent (5), check if a number is prime (6), or exit with (-1):\n"
 	powPrompt: .asciz "Please enter a number:\n"
 	powPrompt2: .asciz "Please enter an exponent:\n"
 	gcdPrompt: .asciz "Please enter a term:\n"
@@ -192,4 +223,5 @@ main:
 	gcdOutput: .asciz "The greatest common denominator is %d.\n"
 	moduloOutput: .asciz "The modulus is %d.\n"
 	cpubexpLibOutput: .asciz "The public exponent is %d.\n"
+	cprivexpOutput: .asciz "The private key is %d. Don't tell anyone.\n"
 	isprimeOutput: .asciz "If it is zero, it's not prime. If it's one, it is prime: %d\n"
