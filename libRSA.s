@@ -58,6 +58,8 @@ pow:
 	ADD sp, sp, #8
 	MOV pc, lr
 
+.data
+
 //End pow
 
 .text
