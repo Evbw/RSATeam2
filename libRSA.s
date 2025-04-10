@@ -166,6 +166,7 @@ cpubexp:
 	# calculating N
 	
 	MUL r8, r9, r10
+	MOV r2, r8
 	
 	# calculating totient
 
@@ -241,8 +242,8 @@ cprivexp:
 
 	BL cpubexp
 
-	MOV r12, r0
-	MOV r13, r1 //preserving the toteint and the public key
+	MOV r10, r0
+	MOV r11, r1 //preserving the toteint and the public key
 
 	LDR r0, =cprivexpPrompt
 	BL printf
@@ -266,7 +267,7 @@ cprivexp:
 
 .data
 	cprivexpPrompt: .asciz "Please enter some integer:\n"
-	cprivexpInput: .asciz "%d\n"
+	cprivexpInput: .asciz "%d"
 	cprivexpNum: .word 0
 
 //End cprivexp
