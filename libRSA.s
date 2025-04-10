@@ -60,6 +60,8 @@ pow:
 
 //End pow
 
+.text
+
 gcd:
 	SUB sp, sp, #8
 	STR lr, [sp, #0]
@@ -188,10 +190,10 @@ cpubexp:
 	LDR r0, [r0]
 	MOV r11, r0
 	
-	CMP r0, #0 // check to see if the number is positive
+	CMP r0, #1 // Check if 1 < e
 	BLE Error_msg
 		
-	CMP r0, r5 // Check to see input is less than totient
+	CMP r0, r5 // Check if e < totient
 	BGE Error_msg
 	
 	MOV r0, r11
