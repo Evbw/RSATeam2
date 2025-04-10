@@ -230,18 +230,60 @@ closeFile_error:
 	BX lr
 @ ----- END FILE SECTION -----
 
-
-    LDR r0, =decryptPrompt	// Read from "encrypted.txt"
-    BL printf			// for (cipher in "encrypted.txt") { decrypt and write in "plaintext.txt }
+//Start decrypt section
+	// Function: decrypt.s
+	// Input: c (ciphertext), d (private key), n
+	// Output: m (decrypted text)
+	// Write decrypted text to "plaintext.txt"
+ 	LDR r0, =decryptPrompt		// Read from "encrypted.txt"
+	BL printf			// for (cipher in "encrypted.txt") { decrypt and write in "plaintext.txt }
     
-    LDR r0, =decryptFormat
-    LDR r1, =decryptInput
-    BL scanf
+	LDR r0, =decryptFormat
+	LDR r1, =decryptInput
+	BL scanf
 
-				// Function: decrypt.s
-    // Input: c (ciphertext), d (private key), n
-    // Output: m (decrypted text)
-    // Write decrypted text to "plaintext.txt"
+	BL openFile
+
+	# Loop through each character of the message
+	LDR r2, =messageBuffer			@ Load address of message buffer
+	LDR r3, =messageLength			@ Load max length of message
+	MOV r4, #0				@ Index for iterating through message
+
+decrypt_loop:
+	# Load the current character from the message
+	LDRB r1, [r2, r4]			@ Load the current character (m)
+	CMP r1, #0				@ Check if we reached the end of the string (null terminator)
+	BEQ decrypt_done			@ If null terminator, finish encryption loop
+
+	# Encrypt the character m using RSA: c = m^e % n
+	# Call the encrypt function with m (r1), e (r5), n (r6)
+	MOV r0, r1				@ Move m to r0 (input to encrypt function)
+	MOV r1, r5				@ Move e (public key) to r1
+	MOV r2, r6				@ Move n (modulus) to r2
+	BL decrypt				@ Encrypt m (r1) with e (r5) and n (r6)
+
+	# Store result (ciphertext) in r0 (which now contains the result from encrypt function)
+	MOV r3, r0				@ r0 now holds the ciphertext c
+
+	# Write the ciphertext to the "encrypted.txt" file
+	LDR r0, =ciphertextFile			@ Load the filename to write
+	LDR r1, =fileWriteMode			@ File write mode (could be binary or text)
+	BL openFile				@ Open the file
+
+	MOV r0, r3				@ Prepare the ciphertext for writing
+	BL writeToFile 				@ Write the ciphertext to file
+
+	# Increment the index to move to the next character
+	ADD r4, r4, #1
+	B encrypt_loop				@ Repeat for the next character
+
+decrypt_done:
+	# Close the file after writing
+	LDR r0, =ciphertextFile
+	// Function: decrypt.s
+	// Input: c (ciphertext), d (private key), n
+	// Output: m (decrypted text)
+	// Write decrypted text to "plaintext.txt"
 
     // pop stack record
     LDR lr, [sp]
@@ -252,16 +294,9 @@ closeFile_error:
     prompt1: .asciz "Receiver, input a positive prime value < 50 for p: \n"
     prompt2: .asciz "Receiver, input a positive prime value < 50 for q: \n"
     format1: .asciz "%d"
-    prompt1: .asciz "Receiver, input a positive value < 50 for p: \n"
-    prompt2: .asciz "Receiver, input a positive value < 50 for q: \n"
     decryptPrompt: .asciz "Please enter the name of the file to be decrypted:\n"
-    format1: .asciz "%d"
-    prompt1: .asciz "Receiver, input a positive prime value < 50 for p: \n"
-    prompt2: .asciz "Receiver, input a positive prime value < 50 for q: \n"
-    format1: .asciz "%d"
-    decryptPrompt: .asciz "Please enter the name of the file to be decrypted:\n" 
     format2: .asciz "%d"
-    decryptFormat: .asciz "%s"
+    decryptFormat: .asciz "%[^\n]"
     pValue: .word 0
     qValue: .word 0
     decryptInput: .word 100
