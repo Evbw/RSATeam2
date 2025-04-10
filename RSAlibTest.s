@@ -177,6 +177,7 @@ main:
 		LDR r1, =num
 		LDR r1, [r1]
 		BL cprivexp
+		MOV r1, r0
 
 		LDR r0, =cprivexpOutput
 		BL printf
