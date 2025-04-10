@@ -62,7 +62,8 @@ pow:
 
 gcd:
 	SUB sp, sp, #8
-	STR lr, [sp]
+	STR lr, [sp, #0]
+	STR r1, [sp, #4]
 
 	CMP r0, r1
 	BEQ Equal			//Handle an instance when they are the same value
@@ -108,7 +109,8 @@ gcd:
 
 	EndGCD:
 
-	LDR lr, [sp]
+	LDR lr, [sp, #0]
+	LDR r1, [sp, #4]
 	ADD sp, sp, #8
 	MOV pc, lr
 
@@ -126,6 +128,7 @@ modulo:
 	# Push the stack
 	SUB sp, sp, #8
 	STR lr, [sp, #0]
+	STR r1, [sp, #4]
 
 	MOV r5, r0
 	# Perform division
@@ -142,6 +145,7 @@ modulo:
 
 	# Pop the stack (and return to the OS)
 	LDR lr, [sp, #0]
+	LDR r1, [sp, #4]
 	ADD sp, sp, #8
 	MOV pc, lr
 
@@ -153,7 +157,8 @@ modulo:
 cpubexp:
 
 	SUB sp, sp, #8
-	STR lr, [sp]
+	STR lr, [sp, #0]
+	STR r1, [sp, #4]
 
 	MOV r10, r0 //moving p and q to ensure that values are preserved
 	MOV r9, r1 
@@ -168,7 +173,6 @@ cpubexp:
 	SUB r6 ,r9, #1
 	MUL r5, r6, r7 //totient
 
-
 	exp_loop:
 
 	LDR r0, =prompt_exp
@@ -178,26 +182,27 @@ cpubexp:
 	LDR r1, =input1
 	BL scanf
 	
-	LDR r1, =input1
-	LDR r0, [r1]
+	LDR r0, =input1
+	LDR r0, [r0]
 	MOV r11, r0
 	
 	CMP r0, #0 // check to see if the number is positive
-	BGT Error_msg
-		CMP r0, #1 // check to see if input is greater than 1
-		BGT Error_msg
-			CMP r0, r5 // Check to see input is less than totient
-			BLT Error_msg
-				BL isPrime//checking if the input is prime
-				CMP r0, #0
-				BNE Error_msg
-					MOV r0, r11
-					MOV r1, r5
-					BL gcd //chekcing if input is comprime to totient
-					CMP r0, #1
-					BNE Error_msg
-						B done
-
+	BLE Error_msg
+		
+	CMP r0, r5 // Check to see input is less than totient
+	BGE Error_msg
+	
+	BL isPrime//checking if the input is prime
+	CMP r0, #1
+	BNE Error_msg
+	
+	MOV r0, r11
+	MOV r1, r5
+	
+	BL gcd //chekcing if input is coprime to totient
+	CMP r0, #1
+	BNE Error_msg
+	B done
 
 	Error_msg:
 		
@@ -211,18 +216,60 @@ cpubexp:
 	MOV r1, r5
 	MOV r2, r8
 
-	LDR lr, [sp]
-	ADD sp, sp, #4
+	LDR lr, [sp, #0]
+	LDR r1, [sp, #4]
+	ADD sp, sp, #8
 	MOV pc, lr
 
 
 .data
 
-	prompt_exp: .asciz "Please enter a number that is: \n between 1 and %d \npositive \n prime \n coprime to %d:"
+	prompt_exp: .asciz "Please enter a number that is between 1 and %d, positive, and coprime to %d:"
 	exp_format:.asciz "%d"
 	input1: .word 0
 	error_msg: .asciz "your value does not match the specifications, please try again."
 //End cpubexp
+
+.text
+
+cprivexp:
+	
+	//push stack record
+	SUB sp, sp, #8
+	STR lr, [sp, #0]
+	STR r1, [sp, #4]
+
+	BL cpubexp
+
+	MOV r12, r0
+	MOV r13, r1 //preserving the toteint and the public key
+
+	LDR r0, =cprivexpPrompt
+	BL printf
+
+	LDR r0, =cprivexpInput
+	LDR r1, =cprivexpNum
+	BL scanf
+
+	LDR r2, =cprivexpNum
+	LDR r2, [r2]
+
+	MUL r2, r2, r1
+	ADD r2, r2, #1
+	MOV r1, r2
+	BL __aeabi_idiv
+
+	LDR lr, [sp, #0]
+	LDR r1, [sp, #4]
+	ADD sp, sp, #8
+	MOV pc, lr
+
+.data
+	cprivexpPrompt: .asciz "Please enter some integer:\n"
+	cprivexpInput: .asciz "%d\n"
+	cprivexpNum: .word 0
+
+//End cprivexp
 
 .text
 
