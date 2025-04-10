@@ -161,13 +161,12 @@ cpubexp:
 	STR r1, [sp, #4]
 
 	MOV r10, r0 //moving p and q to ensure that values are preserved
-	MOV r9, r1 
+	MOV r9, r1
 
 	# calculating N
-	
+
 	MUL r8, r9, r10
-	MOV r2, r8
-	
+
 	# calculating totient
 
 	SUB r7, r10, #1
@@ -175,6 +174,8 @@ cpubexp:
 	MUL r5, r6, r7 //totient
 
 	exp_loop:
+	MOV r2, r5
+	MOV r1, r5
 
 	LDR r0, =prompt_exp
 	BL printf
@@ -192,10 +193,6 @@ cpubexp:
 		
 	CMP r0, r5 // Check to see input is less than totient
 	BGE Error_msg
-	
-	BL isPrime//checking if the input is prime
-	CMP r0, #1
-	BNE Error_msg
 	
 	MOV r0, r11
 	MOV r1, r5
@@ -243,7 +240,7 @@ cprivexp:
 	BL cpubexp
 
 	MOV r10, r0
-	MOV r11, r1 //preserving the toteint and the public key
+	MOV r11, r1 //preserving the totient and the public key
 
 	LDR r0, =cprivexpPrompt
 	BL printf
@@ -255,9 +252,11 @@ cprivexp:
 	LDR r2, =cprivexpNum
 	LDR r2, [r2]
 
-	MUL r2, r2, r1
+	MUL r2, r2, r5
 	ADD r2, r2, #1
-	MOV r1, r2
+
+	MOV r0, r2
+	MOV r1, r10
 	BL __aeabi_idiv
 
 	LDR lr, [sp, #0]
