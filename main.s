@@ -55,48 +55,44 @@ main:
             LDR r0, =p_ErrorMsg1
             BL printf
             B p_StartLoop
-        p_EndLoop:
-        
-        LDR r0, =debug1
-        LDR r1, =pValue
-        LDR r1, [r1]
-        BL printf
+
+    p_EndLoop:
 
     // Loop for q value. q must be prime and < 50.
-    q_Loop:
+    q_StartLoop:
 
-        LDR r0, =prompt2
+        LDR r0, =promptw
         BL printf
-        LDR r0, =format2
+        LDR r0, =format1
         LDR r1, =qValue
-        BL scanf  // q stored in qValue
+        BL scanf  // q stored in pValue
 
-        // Verify q
+        // Verify 0 < q < 50
         LDR r0, =qValue
         LDR r0, [r0]
+        MOV r1, #0
         CMP r0, #0
-        BGT q_elsif1
-            // Statement if q <= 0
-            LDR r0, =q_ErrorMsg1
-            BL printf
-            B q_Loop
-        q_elsif1:
-            // Statement if 0 < q 50
-            CMP r0, #50
-            BGE q_else
-            B endIf2
-        q_else:
-            LDR r0, =q_ErrorMsg1
-            BL printf
-            B q_Loop
-        endIf2:
+	ADDGE r1, r1, #1  // q >= 0
+        MOV r2, #0
+        CMP r0, #50
+        ADDLT r2, r2, #1  // 0 <= q < 50
+        AND r1, r1, r2
 
-        LDR r0, =debug2
-        LDR r1, =qValue
-        LDR r1, [r1]
-        BL printf
-        // END Verify q
-        
+        // Verify q is prime
+        BL isPrime
+        AND r0, r0, r1
+
+        CMP r0, #1
+        BNE q_error
+            // Statement if q is valid
+            B q_EndLoop
+        q_error:
+            LDR r0, =q_ErrorMsg1
+            BL printf
+            B q_StartLoop
+
+    q_EndLoop:
+
 
     // Receiver generates public key
     // Function: cpubexp.s
@@ -253,28 +249,22 @@ closeFile_error:
     MOV pc, lr
 
 .data
+    // Prompts
     prompt1: .asciz "Receiver, input a positive prime value < 50 for p: \n"
     prompt2: .asciz "Receiver, input a positive prime value < 50 for q: \n"
-    format1: .asciz "%d"
-    prompt1: .asciz "Receiver, input a positive value < 50 for p: \n"
-    prompt2: .asciz "Receiver, input a positive value < 50 for q: \n"
     decryptPrompt: .asciz "Please enter the name of the file to be decrypted:\n"
+    // Formats 
     format1: .asciz "%d"
-    prompt1: .asciz "Receiver, input a positive prime value < 50 for p: \n"
-    prompt2: .asciz "Receiver, input a positive prime value < 50 for q: \n"
-    format1: .asciz "%d"
-    decryptPrompt: .asciz "Please enter the name of the file to be decrypted:\n" 
-    format2: .asciz "%d"
     decryptFormat: .asciz "%s"
+    // Stored values
     pValue: .word 0
     qValue: .word 0
     decryptInput: .word 100
+    // Error messages
     p_ErrorMsg1: .asciz "Invalid p value. Requirement: 0 <= p < 50, and must be prime.\n"
     q_ErrorMsg1: .asciz "Invalud q value. Requirement: 0 <= q < 50, and must be prime.\n"
     debug1: .asciz "Valid p value: %d.\n"
     debug2: .asciz "Valid q value: %d.\n"
-    debug: .asciz "Valid p value: %d.\n"
-    p_ErrorMsg2: .asciz "The Number is not prime.\n"
 
 @ ----- .data for the Encrypt section ----
 	messagePrompt: .asciz "Please enter the message to encrypt: \n"		@ Prompt user to enter a message
