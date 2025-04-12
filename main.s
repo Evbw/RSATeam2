@@ -61,7 +61,7 @@ main:
     // Loop for q value. q must be prime and < 50.
     q_StartLoop:
 
-        LDR r0, =promptw
+        LDR r0, =prompt2
         BL printf
         LDR r0, =format1
         LDR r1, =qValue
