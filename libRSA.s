@@ -300,10 +300,13 @@ isPrime:
 	// 	r0 - Binary 1 (True) or 0 (False)
 
 	//push stack record
-	SUB sp, sp, #12
+	SUB sp, sp, #24
     	STR lr, [sp, #0]
-	STR r4, [sp, #4]
-	STR r5, [sp, #8]
+	STR r1, [sp, #4]
+	STR r2, [sp, #8]
+	STR r3, [sp, #12]
+	STR r4, [sp, #16]
+	STR r5, [sp, #20]
 
 	// Function dictionary
 	// r4 - number for prime check
@@ -354,9 +357,12 @@ isPrime:
 	endIf1:
 
 	LDR lr, [sp, #0]
-	LDR r4, [sp, #4]
-	LDR r5, [sp, #8]
-	ADD sp, sp, #12
+	LDR r1, [sp, #4]
+	LDR r2, [sp, #8]
+	LDR r3, [sp, #12]
+	LDR r4, [sp, #16]
+	LDR r5, [sp, #20]
+	ADD sp, sp, #24
 	MOV pc, lr
 .data
 //End isPrime
