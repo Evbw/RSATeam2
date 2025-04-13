@@ -58,6 +58,8 @@ pow:
 	ADD sp, sp, #8
 	MOV pc, lr
 
+.data
+
 //End pow
 
 .text
@@ -191,37 +193,37 @@ cpubexp:
 	MUL r5, r6, r7 //totient
 
 	exp_loop:
-	MOV r2, r5
+	MOV r2, r5		//Move totient to r2 and r1
 	MOV r1, r5
 
-	LDR r0, =prompt_exp
+	LDR r0, =prompt_exp	//Request input
 	BL printf
 
 	LDR r0, =exp_format
 	LDR r1, =input1
 	BL scanf
 	
-	LDR r0, =input1
+	LDR r0, =input1		//Move user input to r0 and r11
 	LDR r0, [r0]
 	MOV r11, r0  // r11 = e
 	
-	CMP r0, #1 // Check if 1 < e
+	CMP r0, #1		// Check if 1 < e
 	BLE Error_msg
 		
-	CMP r0, r5 // Check if e < totient
+	CMP r0, r5		// Check if e < totient
 	BGE Error_msg
 	
 	MOV r0, r11
 	MOV r1, r5
 	
-	BL gcd //chekcing if input is coprime to totient
-	CMP r0, #1
+	BL gcd			//Checking if input is coprime to totient
+	CMP r0, #1		//If not equal to 1, then we need a new input
 	BNE Error_msg
 	B done
 
 	Error_msg:
 		
-		LDR r0, =error_msg
+		LDR r0, =error_msg	//Request new input if user input value is invalid
 		BL printf
 		B exp_loop
 
@@ -260,7 +262,7 @@ cprivexp:
 	BL cpubexp
 
 	MOV r10, r0
-	MOV r11, r1 //preserving the totient and the public key
+	MOV r11, r1 			//preserving the totient and the public key
 
 	LDR r0, =cprivexpPrompt
 	BL printf
@@ -269,13 +271,13 @@ cprivexp:
 	LDR r1, =cprivexpNum
 	BL scanf
 
-	LDR r2, =cprivexpNum
+	LDR r2, =cprivexpNum		//Request user input for x and move to r2
 	LDR r2, [r2]
 
-	MUL r2, r2, r5
+	MUL r2, r2, r5			//Multiply x and totient, then add 1
 	ADD r2, r2, #1
 
-	MOV r0, r2
+	MOV r0, r2			//Divide new value by e from cpubexp
 	MOV r1, r10
 	BL __aeabi_idiv
 
