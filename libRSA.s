@@ -159,20 +159,35 @@ modulo:
 .text
 
 cpubexp:
+	// Input:
+	// 	r0 = p
+	// 	r1 = q
+	// Output:
+	// 	r0 = e, public key
+	// 	r1 = totient
+	// 	r2 = n
 
-	SUB sp, sp, #8
+	// Function dictionary:
+	// r10 - p
+	// r9 - q
+	// r8 - n
+	// r5 - totient
+
+	SUB sp, sp, #20
 	STR lr, [sp, #0]
-	STR r1, [sp, #4]
+	STR r5, [sp, #4]
+	STR r8, [sp, #8]
+	STR r9, [sp, #12]
+	STR r10, [sp, #16]
 
-	MOV r10, r0 //moving p and q to ensure that values are preserved
+	// Preserve p and q
+	MOV r10, r0
 	MOV r9, r1
 
-	# calculating N
-
+	// calculating n
 	MUL r8, r9, r10
 
-	# calculating totient
-
+	// calculating totient
 	SUB r7, r10, #1
 	SUB r6 ,r9, #1
 	MUL r5, r6, r7 //totient
@@ -190,7 +205,7 @@ cpubexp:
 	
 	LDR r0, =input1		//Move user input to r0 and r11
 	LDR r0, [r0]
-	MOV r11, r0
+	MOV r11, r0  // r11 = e
 	
 	CMP r0, #1		// Check if 1 < e
 	BLE Error_msg
@@ -219,8 +234,11 @@ cpubexp:
 	MOV r2, r8
 
 	LDR lr, [sp, #0]
-	LDR r1, [sp, #4]
-	ADD sp, sp, #8
+	LDR r5, [sp, #4]
+	LDR r8, [sp, #8]
+	LDR r9, [sp, #12]
+	LDR r10, [sp, #16]
+	ADD sp, sp, #20
 	MOV pc, lr
 
 
@@ -278,10 +296,19 @@ cprivexp:
 .text
 
 isPrime:
-	
+	// Inputs:
+	// 	r0 - Number to check if Prime
+	// Outputs:
+	// 	r0 - Binary 1 (True) or 0 (False)
+
 	//push stack record
-	SUB sp, sp, #8
+	SUB sp, sp, #24
     	STR lr, [sp, #0]
+	STR r1, [sp, #4]
+	STR r2, [sp, #8]
+	STR r3, [sp, #12]
+	STR r4, [sp, #16]
+	STR r5, [sp, #20]
 
 	// Function dictionary
 	// r4 - number for prime check
@@ -332,7 +359,12 @@ isPrime:
 	endIf1:
 
 	LDR lr, [sp, #0]
-	ADD sp, sp, #8
+	LDR r1, [sp, #4]
+	LDR r2, [sp, #8]
+	LDR r3, [sp, #12]
+	LDR r4, [sp, #16]
+	LDR r5, [sp, #20]
+	ADD sp, sp, #24
 	MOV pc, lr
 .data
 //End isPrime
