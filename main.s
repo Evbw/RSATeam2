@@ -119,7 +119,6 @@ main:
 
 
 @ ----- START ENCRYPT SECTION -----
-@ I started doing this then realized you're already requesting stuff above, so I was a little confused as to what I should be requesting here.
 	# Request a message to encrypt using a public key the from Sender
 	LDR r0, =messagePrompt			@ Message prompt to display
 	BL printf				@ Print the prompt for message input
