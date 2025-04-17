@@ -119,50 +119,60 @@ main:
 
 
 @ ----- START ENCRYPT SECTION -----
-	# Request a message to encrypt using a public key the from Sender
-	LDR r0, =messagePrompt			@ Message prompt to display
-	BL printf				@ Print the prompt for message input
-	LDR r0, =messageBuffer			@ Where the message will be stored
-	LDR r1, =messageLength			@ Max length of message input
-	BL scanf				@ Read message from sender
+	PUSH {lr}
 
-	# Loop through each character of the message
-	LDR r2, =messageBuffer			@ Load address of message buffer
-	LDR r3, =messageLength			@ Load max length of message
-	MOV r4, #0				@ Index for iterating through message
+	@ Request a message from the user to be encrypted
+	LDR r0, =messagePrompt
+	BL printf
+
+	LDR r0, =inputFormat				@ scanf format: "%s"
+	LDR r1, =messageBuffer				@ store input here
+	BL scanf
+	@ Read message from user input into messageBuffer
+
+	LDR r0, =ciphertextFile
+	LDR r1, =fileWriteMode
+	BL openFile
+	CMP r0, #0
+	BLT main_error
+	MOV r7, r0							@ r7 holds file descriptor
+
+	LDR r2, =messageBuffer				@ r2 = pointer to message
+	MOV r4, #0							@ r4 = index
 
 encrypt_loop:
-	# Load the current character from the message
-	LDRB r1, [r2, r4]			@ Load the current character (m)
-	CMP r1, #0				@ Check if we reached the end of the string (null terminator)
-	BEQ encrypt_done			@ If null terminator, finish encryption loop
+	@ Loop through each character of the message
+	@ Load the current character from the message
+	LDRB r1, [r2, r4]					@ Load byte at index
+	@ Check if we reached the end of the string (null terminator)
+	CMP r1, #0							@ Check for null terminator
+	BEQ encrypt_done
 
-	# Encrypt the character m using RSA: c = m^e % n
-	# Call the encrypt function with m (r1), e (r5), n (r6)
-	MOV r0, r1				@ Move m to r0 (input to encrypt function)
-	MOV r1, r5				@ Move e (public key) to r1
-	MOV r2, r6				@ Move n (modulus) to r2
-	BL encrypt				@ Encrypt m (r1) with e (r5) and n (r6)
+	MOV r0, r1 							@ r0 = character
+	MOV r1, r5							@ r1 = exponent
+	MOV r2, r6							@ r2 = modulus
+	@ Encrypt the character m using RSA: c = m^e % n
+	@ Call the encrypt function with m (r1), e (r5), n (r6)
+	BL encrypt							@ r0 = encrypted byte
 
-	# Store result (ciphertext) in r0 (which now contains the result from encrypt function)
-	MOV r3, r0				@ r0 now holds the ciphertext c
+	MOV r1, r0							@ r1 = encrypted value
+	LDR r2, =oneByteBuf
+	STRB r1, [r2]						@ Store encrypted byte
+	MOV r1, r2 							@ r1 = address of buffer
+	MOV r2, #1 							@ r2 = byte count
+	MOV r0, r7							@ r0 = file descriptor
+	@ Write the ciphertext to the file
+	BL writeToFile
 
-	# Write the ciphertext to the "encrypted.txt" file
-	LDR r0, =ciphertextFile			@ Load the filename to write
-	LDR r1, =fileWriteMode			@ File write mode (could be binary or text)
-	BL openFile				@ Open the file
-
-	MOV r0, r3				@ Prepare the ciphertext for writing
-	BL writeToFile 				@ Write the ciphertext to file
-
-	# Increment the index to move to the next character
 	ADD r4, r4, #1
-	B encrypt_loop				@ Repeat for the next character
+	B encrypt_loop
 
 encrypt_done:
-	# Close the file after writing
-	LDR r0, =ciphertextFile
-	BL closeFile				@ Close the file
+	MOV r0, r7
+	@ Close the file after writing
+	BL closeFile
+
+	POP {pc}
 @ ----- END ENCRYPT SECTION -----
 
 
