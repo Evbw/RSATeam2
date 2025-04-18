@@ -8,7 +8,7 @@
 .global main
 main:
     // Program dictionary:
-    // r4 - 
+    // r4 - rizz
     // r5 - 
     // r6 -
     // r7 -
