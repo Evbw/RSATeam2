@@ -17,8 +17,11 @@
 .text
 
 pow:
-	SUB sp, sp, #8
-	STR lr, [sp]
+	SUB sp, sp, #16
+	STR lr, [sp, #0]
+ 	STR r5, [sp, #4]
+  	STR r6, [sp, #8]
+   	STR r7, [sp, #12]
 
 	MOV r5, r0		//Store the term in r5 and r7
 	MOV r7, r0
@@ -55,7 +58,11 @@ pow:
 	EndPow:
 
 	LDR lr, [sp]
-	ADD sp, sp, #8
+ 	LDR lr, [sp, #0]
+ 	LDR r5, [sp, #4]
+  	LDR r6, [sp, #8]
+   	LDR r7, [sp, #12]
+	ADD sp, sp, #16
 	MOV pc, lr
 
 .data
