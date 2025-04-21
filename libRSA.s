@@ -135,30 +135,31 @@ gcd:
 # r1 = divisor
 # Return: r0 = result of (dividend % divisor)
 modulo:
+ 
+# Push the stack
+    SUB sp, sp, #8
+    STR lr, [sp, #0]
+    STR r1, [sp, #4]
 
-	# Push the stack
-	SUB sp, sp, #8
-	STR lr, [sp, #0]
-	STR r1, [sp, #4]
+# Perform division
+    MOV r5, r0            // Save dividend
+    BL __aeabi_idiv       // Call division (quotient in r0)
 
-	MOV r5, r0
-	# Perform division
-	BL __aeabi_idiv					//Call aeabi_div(dividend, divisor) and return quotient in r0
+# Store the quotient
+    MOV r2, r0            // r2 = quotient
 
-	# Store the quotient
-	MOV r2, r0					//r2 = quotient (returned by aeabi_div)
+# Multiply the quotient by the divisor
+    MOV r3, r2            // Ensure different register for MUL
+    MUL r2, r3, r1        // r2 = quotient * divisor
 
-	# Multiply the quotient by the divisor
-	MUL r2, r2, r1					//r2 = quotient * divisor
+# Subtract to get the remainder
+    SUB r0, r5, r2        // r0 = dividend - (quotient * divisor)
 
-	# Subtract to get the remainder
-	SUB r0, r5, r2					//r0 = dividend - (divisor * quotient)
-
-	# Pop the stack (and return to the OS)
-	LDR lr, [sp, #0]
-	LDR r1, [sp, #4]
-	ADD sp, sp, #8
-	MOV pc, lr
+# Pop the stack (and return to the OS)
+    LDR lr, [sp, #0]
+    LDR r1, [sp, #4]
+    ADD sp, sp, #8
+    MOV pc, lr
 
 .data
 //End modulo
