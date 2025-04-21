@@ -260,43 +260,67 @@ cpubexp:
 .text
 
 cprivexp:
-	
-	//push stack record
-	SUB sp, sp, #8
-	STR lr, [sp, #0]
-	STR r1, [sp, #4]
+    // Push registers onto the stack
+    SUB sp, sp, #20
+    STR lr, [sp, #0]
+    STR r4, [sp, #4]
+    STR r5, [sp, #8]
+    STR r6, [sp, #12]
+    STR r8, [sp, #16]
 
-	BL cpubexp
+    // Inputs:
+    // r0 = e (public exponent)
+    // r1 = phi(n) (Euler's totient)
 
-	MOV r10, r0
-	MOV r11, r1 			//preserving the totient and the public key
+    MOV r6, r0        // Backup e into r6
+    MOV r7, r1        // Backup phi(n) into r7
+    MOV r2, #1        // Initialize x = 1
 
-	LDR r0, =cprivexpPrompt
-	BL printf
+find_x:
+    // Calculate numerator: 1 + x * phi
+    MUL r3, r2, r7        // r3 = x * phi
+    ADD r3, r3, #1        // r3 = (x * phi) + 1
 
-	LDR r0, =cprivexpInput
-	LDR r1, =cprivexpNum
-	BL scanf
+    // Backup x before division
+    MOV r8, r2
 
-	LDR r2, =cprivexpNum		//Request user input for x and move to r2
-	LDR r2, [r2]
+    // Prepare for division
+    MOV r0, r3            // r0 = numerator
+    MOV r1, r6            // r1 = e
+    BL __aeabi_idiv       // Divide
 
-	MUL r2, r2, r5			//Multiply x and totient, then add 1
-	ADD r2, r2, #1
+    // Restore x after division
+    MOV r2, r8
 
-	MOV r0, r2			//Divide new value by e from cpubexp
-	MOV r1, r10
-	BL __aeabi_idiv
+    // Save quotient
+    MOV r4, r0            // r4 = quotient
 
-	LDR lr, [sp, #0]
-	LDR r1, [sp, #4]
-	ADD sp, sp, #8
-	MOV pc, lr
+    // Recalculate numerator fresh
+    MUL r3, r2, r7        // r3 = x * phi
+    ADD r3, r3, #1        // r3 = (x * phi) + 1
 
-.data
-	cprivexpPrompt: .asciz "Please enter some integer:\n"
-	cprivexpInput: .asciz "%d"
-	cprivexpNum: .word 0
+    // Verify: quotient * e == (1 + x * phi)
+    MUL r5, r4, r6        // r5 = quotient * e
+    CMP r5, r3            // Compare
+    BEQ found             // If match, solution found
+
+    // Increment x and loop again
+    ADD r2, r2, #1
+    B find_x
+
+found:
+    MOV r0, r4            // Move d into r0 for return
+
+    // Pop registers and return
+    LDR lr, [sp, #0]
+    LDR r4, [sp, #4]
+    LDR r5, [sp, #8]
+    LDR r6, [sp, #12]
+    LDR r8, [sp, #16]
+    ADD sp, sp, #20
+    MOV pc, lr
+
+.data	
 
 //End cprivexp
 
