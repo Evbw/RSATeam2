@@ -72,9 +72,12 @@ pow:
 .text
 
 gcd:
-	SUB sp, sp, #8
+	SUB sp, sp, #20
 	STR lr, [sp, #0]
-	STR r1, [sp, #4]
+	STR r3, [sp, #4]
+	STR r4, [sp, #8]
+	STR r2, [sp, #12]
+	STR r6, [sp, #16]
 
 	CMP r0, r1
 	BEQ Equal			//Handle an instance when they are the same value
@@ -120,8 +123,11 @@ gcd:
 	EndGCD:
 
 	LDR lr, [sp, #0]
-	LDR r1, [sp, #4]
-	ADD sp, sp, #8
+	LDR r3, [sp, #4]
+	LDR r4, [sp, #8]
+	LDR r2, [sp, #12]
+	LDR r5, [sp, #16]
+	ADD sp, sp, #20
 	MOV pc, lr
 
 .data
@@ -332,6 +338,47 @@ found:
 //End cprivexp
 
 .text
+encrypt:
+
+    //SUB sp, sp, #4
+    //STR lr, [sp]
+
+    // Compute m^e using pow
+    //BL pow              // result in r0
+
+    // r0 now has m^e
+    //MOV r1, r2
+    //BL modulo           // r0 = (m^e) mod n
+
+    // Return result in r0
+    //LDR lr, [sp]
+    //ADD sp, sp, #4
+    //MOV pc, lr
+
+    SUB sp, sp, #12
+    STR lr, [sp]
+    STR r2, [sp, #4]    @ Save n
+    STR r1, [sp, #8]    @ Save e
+
+    @ Compute m^e using pow
+    MOV r1, r1          @ exponent
+    MOV r0, r0          @ base
+    BL pow              @ result in r0
+
+    @ r0 now has m^e
+    LDR r1, [sp, #4]    @ r1 = n (modulus)
+    BL modulo           @ r0 = (m^e) mod n
+
+    @ Return result in r0
+    LDR lr, [sp]
+    ADD sp, sp, #12
+    MOV pc, lr
+
+.data
+// END encrypt
+
+
+.text
 
 isPrime:
 	// Inputs:
@@ -406,3 +453,35 @@ isPrime:
 	MOV pc, lr
 .data
 //End isPrime
+
+
+.text
+decrypt:
+
+    //
+    // Purpose: Decrypt an encrypted message using Private Key
+    // Input: 
+    //     r0 = cipher text (c) = %d
+    //     r1 = private key (d) = %d
+    //     r2 = p * q (n) = %d
+    // Output:
+    //     r0 = decrypted ascii character
+    // 
+
+    // push stack record
+    SUB sp, sp, #4
+    STR lr, [sp]
+
+    // m = c^d mod n
+    BL pow  // r0 = c^d
+    MOV r1, r2
+    BL modulo // r0 = c^d mod n
+
+    // pop stack record
+    LDR lr, [sp]
+    ADD sp, sp, #4
+    MOV pc, lr
+
+.data
+// END decrypt
+
