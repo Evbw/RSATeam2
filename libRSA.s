@@ -158,6 +158,13 @@ modulo:
 # Subtract to get the remainder
 	SUB r0, r5, r2			// r0 = dividend - (quotient * divisor)
 
+ # Ensure result is non-negative
+	CMP r0, #0
+	BGE skip_fix
+	ADD r0, r0, r1		// Make it positive if needed
+    
+	skip_fix:
+
 # Pop the stack (and return to the OS)
 	POP {r1, r5, lr}		// Restore r1, r5, and the return address
 	MOV pc, lr
