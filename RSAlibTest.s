@@ -259,21 +259,21 @@ main:
 		// Enter ciphertext to decrypt
 		LDR r0, =decryptPrompt
 		BL printf
-		LDR r0, =input
-		LDR r1, =decryptInput1
+		LDR r0, =input                // %d
+		LDR r1, =decryptInput1        // ciphertext
 		BL scanf
 
 		// Enter value for private key (d) and modulo (n)
 		LDR r0, =decryptPrompt2
 		BL printf
-		LDR r0, =input
-		LDR r1, =decryptInput2
+		LDR r0, =input                // %d
+		LDR r1, =decryptInput2        // private key
 		BL scanf
 
 		LDR r0, =decryptPrompt3
 		BL printf
-		LDR r0, =input
-		LDR r1, =decryptInput3
+		LDR r0, =input                // %d
+		LDR r1, =decryptInput3        // modulo
 		BL scanf
 
 		LDR r0, =decryptInput1
@@ -293,7 +293,7 @@ main:
 		B MenuLoop
 
 	EndProgram:
-
+ 
 	LDR lr, [sp]
 	ADD sp, sp, #8
 	MOV pc, lr
@@ -336,4 +336,4 @@ main:
 	cprivexpOutput: .asciz "The private key is: %d. The value for x is: %d. Don't tell anyone.\n\n"
 	isprimeOutput: .asciz "Result: %d\nZero is not prime, one is prime.\n\n"
 	encryptOutput: .asciz "The encrypted ciphertext for character %c is %d.\n\n"
-	decryptOutput: .asciz "The decryption for ciphertext %d is %d.\n\n"
+	decryptOutput: .asciz "The encryption for ASCII decimal %d is %d.\n\n"
