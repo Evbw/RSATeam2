@@ -242,6 +242,7 @@ main:
 		LDR r1, [r1]
 		LDR r2, =encryptInput3
 		LDR r2, [r2]
+		MOV r8, r2
 		BL encrypt
 
 		// Print result
@@ -253,10 +254,7 @@ main:
 
 	decryptLib:
 
-		// Clear leftover newline from previous scanf
-		LDR r0, =characterInput       // "%c"
-		LDR r1, =decryptInput1        // Use any temp space
-		BL scanf                      // Dummy read to consume '\n'
+		// Enter a character to decrypt
 
 		// Enter ciphertext to decrypt
 		LDR r0, =decryptPrompt
@@ -278,19 +276,18 @@ main:
 		LDR r1, =decryptInput3
 		BL scanf
 
-		// Decrypt the ciphertext
 		LDR r0, =decryptInput1
 		LDR r0, [r0]
+
 		LDR r1, =decryptInput2
 		LDR r1, [r1]
+
 		LDR r2, =decryptInput3
 		LDR r2, [r2]
 		BL decrypt
 
-		// Print result; Output decrypted character
-		MOV r2, r0
-		LDR r1, =decryptInput1
-		LDR r1, [r1]
+		// Print result
+
 		LDR r0, =decryptOutput
 		BL printf
 		B MenuLoop
@@ -324,9 +321,10 @@ main:
 	input: .asciz "%d"
 	num: .word 0
 	encryptInput1: .space 2
+	decryptInput1: .asciz "%d"
+	decryptChar: .space 100
 	encryptInput2: .word 0
 	encryptInput3: .word 0
-	decryptInput1: .word 0
 	decryptInput2: .word 0
 	decryptInput3: .word 0
 	cprivexpInput1: .word 0
