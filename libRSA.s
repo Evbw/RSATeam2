@@ -23,10 +23,17 @@ pow:
   	STR r6, [sp, #8]
    	STR r7, [sp, #12]
 
+	// Function dictionary
+	// r5 - base
+	// r6 - exponent
+	// r7 - base
+	// r8 - modulus
+
 	MOV r5, r0		//Store the term in r5 and r7
 	MOV r7, r0
-
 	MOV r6, r1		//And move to to r6
+	MOV r8, r2
+
 
 	MOV r1, #0
 	CMP r6, r1
@@ -357,38 +364,23 @@ found:
 .text
 encrypt:
 
+	// Inputs:
+	//     r0 - ASCII decimal, base
+	//     r1 - public key (e), exponent
+	//     r2 - modulus (n), mod
+	// Outputs:
+	//     r0 - ciphertext (c)
+
 	SUB sp, sp, #4
 	STR lr, [sp]
 
-	MOV r4, r0
-	MOV r8, r2
-
-	// Compute m^e using pow
+	// Compute modular exponentiation: c = m^e mod n
 	BL pow              // result in r0
 
 	// Return result in r0
 	LDR lr, [sp]
 	ADD sp, sp, #4
 	MOV pc, lr
-
-	//SUB sp, sp, #12
-	//STR lr, [sp]
-	//STR r2, [sp, #4]    @ Save n
-	//STR r1, [sp, #8]    @ Save e
-
-	//@ Compute m^e using pow
-	//MOV r1, r1          @ exponent
-	//MOV r0, r0          @ base
-	//BL pow              @ result in r0
-
-	//@ r0 now has m^e
-	//LDR r1, [sp, #4]    @ r1 = n (modulus)
-	//BL modulo           @ r0 = (m^e) mod n
-
-	//@ Return result in r0
-	//LDR lr, [sp]
-	//ADD sp, sp, #12
-	//MOV pc, lr
 
 .data
 // END encrypt
@@ -471,50 +463,23 @@ isPrime:
 .text
 decrypt:
 
-// Arguments:
+// Inputs:
 // r0 = base
 // r1 = exponent
 // r2 = modulus
-// Return:
+// Ouputs:
 // r0 = (base^exponent) % modulus
 
-mod_exp:
-    push {r1-r4, lr}        // Save registers we will use
-    mov r3, #1              // r3 = result = 1
+	SUB sp, sp, #4
+	STR lr, [sp]
 
-mod_exp_loop:
-    cmp r1, #0              // while exponent > 0
-    beq mod_exp_done
+	// Compute modular exponentiation: m = c^d mod n
+	BL pow              // result in r0
 
-    and r12, r1, #1         // if (exponent & 1)
-    cmp r12, #0
-    beq skip_multiply
-
-    // result = (result * base) % modulus
-    mul r12, r3, r0         // r12 = result * base
-    mov r0, r12             // move numerator into r0 for division
-    mov r1, r2              // move denominator into r1 for division
-    bl __aeabi_idiv         // call software integer division (r0 = r0 / r1)
-    mul r4, r0, r2          // r4 = (quotient) * modulus
-    sub r3, r12, r4         // r3 = (result * base) - (quotient * modulus)
-
-skip_multiply:
-    // base = (base * base) % modulus
-    mul r12, r0, r0         // r12 = base * base
-    mov r0, r12             // numerator
-    mov r1, r2              // denominator
-    bl __aeabi_idiv         // call software division
-    mul r4, r0, r2          // r4 = (quotient) * modulus
-    sub r0, r12, r4         // base = (base * base) - (quotient * modulus)
-
-    // exponent >>= 1
-    lsrs r1, r1, #1
-    b mod_exp_loop
-
-mod_exp_done:
-    mov r0, r3              // result -> r0
-    pop {r1-r4, pc}         // restore and return
-
+	// Return result in r0
+	LDR lr, [sp]
+	ADD sp, sp, #4
+	MOV pc, lr
 
 .data
 // END decrypt
