@@ -299,9 +299,7 @@ main:
 		BL decrypt
 
 		// Print result
-		MOV r2, r0
-		LDR r1, =decryptInput1
-		LDR r1, [r1]
+		MOV r1, r0
 		LDR r0, =decryptOutput
 		BL printf
 		B MenuLoop

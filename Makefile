@@ -1,8 +1,8 @@
-ALL: RSAlibTest
+ALL: main
 LIB=libRSA.o
 CC=gcc
 
-RSAlibTest: RSAlibTest.o $(LIB) 
+RSAlibTest: main.o $(LIB) 
 	$(CC) $@.o $(LIB) -g -o $@
 .s.o:
 	$(CC) $(@:.o=.s) -g -c -o $@

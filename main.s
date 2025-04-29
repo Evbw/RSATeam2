@@ -193,7 +193,7 @@ encrypt_done:
 openFile:
 	MOV r7, #5				@ sys_open system call number
 	MOV r2, #0				@ Flags: O_WRONLY (write only), O_CREAT (create if doesn't exist)
-	MOV r3, #0x1FF				@ Permissions (rw-rw-rw-), typically for new files
+	LDR r3, =#0x1FF				@ Permissions (rw-rw-rw-), typically for new files
 	SWI 0					@ Make the system call
 
 	# Check for errors (negative value indicates an error)
@@ -253,79 +253,89 @@ closeFile_error:
 	// Input: c (ciphertext), d (private key), n
 	// Output: m (decrypted text)
 	// Write decrypted text to "plaintext.txt"
- 	LDR r0, =decryptPrompt		// Read from "encrypted.txt"
-	BL printf			// for (cipher in "encrypted.txt") { decrypt and write in "plaintext.txt }
+ 	LDR r0, =decryptPrompt		// Display prompt
+	BL printf
     
-	LDR r0, =decryptFormat
-	LDR r1, =decryptInput
-	BL scanf
-
+	LDR r0, =encryptedFile		//The name of the file
+	LDR r1, =fileReadMode		//(encrypted.text, to be decrypted and written into plaintext.txt)
 	BL openFile
+	MOV r9, r0			//Save input file to r7
 
-	# Loop through each character of the message
-	LDR r2, =messageBuffer			@ Load address of message buffer
-	LDR r3, =messageLength			@ Load max length of message
-	MOV r4, #0				@ Index for iterating through message
+	LDR r0, =plaintextFile		//Open the file to be written to
+	LDR r1, =fileWriteMode		
+	BL openFile
+	MOV r8, r0			//Save output file to r8
 
 decrypt_loop:
-	# Load the current character from the message
-	LDRB r1, [r2, r4]			@ Load the current character (m)
-	CMP r1, #0				@ Check if we reached the end of the string (null terminator)
-	BEQ decrypt_done			@ If null terminator, finish encryption loop
+	//Read the next encrypted character
+	MOV r0, r9			//Input file 
+	LDR r1, =ciphertextBuffer	//Buffer to store the encrypted character
+	BL readFromFile			//Read the number into the buffer
+	CMP r0, #0			//Check if we're at the end of the file
+	BEQ decrypt_done		//And exit if we are
 
-	# Encrypt the character m using RSA: c = m^e % n
-	# Call the encrypt function with m (r1), e (r5), n (r6)
-	MOV r0, r1				@ Move m to r0 (input to encrypt function)
-	MOV r1, r5				@ Move e (public key) to r1
-	MOV r2, r6				@ Move n (modulus) to r2
-	BL decrypt				@ Encrypt m (r1) with e (r5) and n (r6)
+	LDR r1, =cipherTextBuffer	//Load ciphertext into r1
+	STRB r1, [r1]
 
-	# Store result (ciphertext) in r0 (which now contains the result from encrypt function)
-	MOV r3, r0				@ r0 now holds the ciphertext c
+	MOV r0, r1			//r0 = character to be decrypted
+	MOV r1, r5			//r1 = private exponent d
+	MOV r2, r6			//r2 = modulus n
+	BL decrypt			//plaintext character return in r0
 
-	# Write the ciphertext to the "encrypted.txt" file
-	LDR r0, =ciphertextFile			@ Load the filename to write
-	LDR r1, =fileWriteMode			@ File write mode (could be binary or text)
-	BL openFile				@ Open the file
+	LDR r0, =plaintextBuffer
+	STRB r0, [r0]			//Save character to the plaintext buffer
 
-	MOV r0, r3				@ Prepare the ciphertext for writing
-	BL writeToFile 				@ Write the ciphertext to file
+	MOV r0, r8			//Reload output file
+	LDR r1, =plaintextBuffer	
+	MOV r2, #1			//Write 1 byte
+	BL writeToFile
 
-	# Increment the index to move to the next character
-	ADD r4, r4, #1
-	B encrypt_loop				@ Repeat for the next character
+	B encrypt_loop			//Repeat until characters are exhausted
 
 decrypt_done:
-	# Close the file after writing
-	LDR r0, =ciphertextFile
+	MOV r0, r9			//Close both files
+	BL closeFile
+
+	MOV r0, r8
+	BL closeFile
 	// Function: decrypt.s
 	// Input: c (ciphertext), d (private key), n
 	// Output: m (decrypted text)
 	// Write decrypted text to "plaintext.txt"
 
-    // pop stack record
-    LDR lr, [sp]
-    ADD sp, sp, #4
-    MOV pc, lr
+	// pop stack record
+	LDR lr, [sp]
+	ADD sp, sp, #4
+	MOV pc, lr
 
 .data
-    // Prompts
-    prompt1: .asciz "Receiver, input a positive prime value < 50 for p: \n"
-    prompt2: .asciz "Receiver, input a positive prime value < 50 for q: \n"
-    decryptPrompt: .asciz "Please enter the name of the file to be decrypted:\n"
-    // Formats 
-    format1: .asciz "%d"
-    decryptFormat: .asciz "%s"
-    // Stored values
+	// Prompts
+	prompt1: .asciz "Receiver, input a positive prime value < 50 for p: \n"
+	prompt2: .asciz "Receiver, input a positive prime value < 50 for q: \n"
+	decryptPrompt: .asciz "Searching for a file named encrypted.txt:\n"
+	// Formats 
+	format1: .asciz "%d"
+	decryptFormat: .asciz "%s"
+	
+	// Stored values
 
-    pValue: .word 0
-    qValue: .word 0
-    decryptInput: .word 100
-    // Error messages
-    p_ErrorMsg1: .asciz "Invalid p value. Requirement: 0 <= p < 50, and must be prime.\n"
-    q_ErrorMsg1: .asciz "Invalid q value. Requirement: 0 <= q < 50, and must be prime.\n"
+	pValue: .word 0
+	qValue: .word 0
+	decryptInput: .word 100
+	// Error messages
+	p_ErrorMsg1: .asciz "Invalid p value. Requirement: 0 <= p < 50, and must be prime.\n"
+	q_ErrorMsg1: .asciz "Invalid q value. Requirement: 0 <= q < 50, and must be prime.\n"
 
 @ ----- .data for the Encrypt section ----
 	messagePrompt: .asciz "Please enter the message to encrypt: \n"		@ Prompt user to enter a message
 	messageBuffer: .space 100						@ Space to store the message (up to 100 characters)
 	messageLength: .word 100						@ Maximum length for the message
+	//decrypt
+	encryptedFile: .asciz "encrypted.txt"
+	plaintextFile: .asciz "plaintext.txt"
+	fileReadMode: .asciz "r"
+	fileWriteMode: .asciz "w"
+	ciphertextBuffer: .space 4
+	plaintextBuffer: .space 1
+
+
