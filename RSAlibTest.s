@@ -37,6 +37,7 @@ main:
 	BEQ decryptLib
 
 	powLib:
+
 		LDR r0, =powPrompt
 		BL printf
 		
@@ -46,6 +47,7 @@ main:
 
 		LDR r7, =num
 		LDR r7, [r7] //number
+
 
 		LDR r0, =powPrompt2
 		BL printf
@@ -266,8 +268,6 @@ main:
 
 	decryptLib:
 
-		// Enter a character to decrypt
-
 		// Enter ciphertext to decrypt
 		LDR r0, =decryptPrompt
 		BL printf
@@ -299,7 +299,9 @@ main:
 		BL decrypt
 
 		// Print result
-
+		MOV r2, r0
+		LDR r1, =decryptInput1
+		LDR r1, [r1]
 		LDR r0, =decryptOutput
 		BL printf
 		B MenuLoop
@@ -314,6 +316,7 @@ main:
 	prompt: .asciz "Please choose to create a power (1), find the greatest common denominator (2), find the modulus (3), create a public exponent (4), create a private exponent (5), check if a number is prime (6), encrypt character (7), decrypt character (8), or exit with (-1):\n"
 	powPrompt: .asciz "Please enter a number:\n"
 	powPrompt2: .asciz "Please enter an exponent:\n"
+
 	powPrompt3: .asciz "Please enter a modulus: \n"
 	gcdPrompt: .asciz "Please enter a term:\n"
 	gcdPrompt2: .asciz "Please enter a second term:\n"
@@ -349,4 +352,4 @@ main:
 	cprivexpOutput: .asciz "The private key is: %d. The value for x is: %d. Don't tell anyone.\n\n"
 	isprimeOutput: .asciz "Result: %d\nZero is not prime, one is prime.\n\n"
 	encryptOutput: .asciz "The encrypted ciphertext for character %c is %d.\n\n"
-	decryptOutput: .asciz "The encryption for ASCII decimal %d is %d.\n\n"
+	decryptOutput: .asciz "The decryption for ASCII decimal %d is %d.\n\n"
