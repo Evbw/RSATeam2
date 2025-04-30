@@ -61,7 +61,7 @@ main:
             BL printf
             B p_StartLoop
 
-	p_EndLoop:
+    p_EndLoop:
 
     // Loop for q value. q must be prime and < 50.
     q_StartLoop:
@@ -96,7 +96,7 @@ main:
             BL printf
             B q_StartLoop
 
-	q_EndLoop:
+    q_EndLoop:
 
 
 	// Receiver generates public key
@@ -109,9 +109,9 @@ main:
 	LDR r1, [r1]
 	BL cpubexp
 	// Store outputs in program dictionary
-	MOV r4, r0
-	MOV r6, r1
-	MOV r7, r2
+	MOV r4, r0  // public key
+	MOV r6, r1  // totient
+	MOV r7, r2  // modulus
 
 
 	// Receiver generates private key
@@ -120,31 +120,50 @@ main:
 	// Output: r0 = d (private key)
 	BL cprivexp
 	// Store outputs in program dictionary
-	MOV r5, r0
-	B MenuLoop
+	MOV r5, r0  //  private key
+
+//////// TESTING CHECKPOINT 1
+
+	LDR r0, =testingOutput
+	LDR r1, =pValue
+	LDR r1, [r1]
+	LDR r2, =qValue
+	LDR r2, [r2]
+	MOV r3, r7
+	BL printf
+
+	LDR r0, =testingOutput2
+	MOV r1, r6
+	MOV r2, r4
+	MOV r3, r5
+	BL printf
+
+//////// TESTING CHECKPOINT 1 - TESTED AND FUNCTIONAL
+
+//	B MenuLoop
 
 	//Enter Main Menu
 
-	MenuLoop:
+//	MenuLoop:
 
-	LDR r0, =menuPrompt
-	BL printf
+//	LDR r0, =menuPrompt
+//	BL printf
 
-	LDR r0, =input
-	LDR r1, =num
-	BL scanf
+//	LDR r0, =input
+//	LDR r1, =num
+//	BL scanf
 
-	LDR r0, =num
-	LDR r0, [r0]
+//	LDR r0, =num
+//	LDR r0, [r0]
 
-	CMP r0, #-1
-	BLE EndProgram
-	CMP r0, #1
-	BEQ p_StartLoop
-	CMP r0, #2
-	BEQ EncryptSection
-	CMP r0, #3
-	BGE DecryptSection
+//	CMP r0, #-1
+//	BLE EndProgram
+//	CMP r0, #1
+//	BEQ p_StartLoop
+//	CMP r0, #2
+//	BEQ EncryptSection
+//	CMP r0, #3
+//	BGE DecryptSection
 
     // Request message to encrypt, using public key, from Sender
     // for (character in message) { encrypt char and write in "encrypted.txt" }
@@ -168,115 +187,116 @@ EncryptSection:
 	@ Read message from user input into messageBuffer
 
 	LDR r0, =cipherTextFile
-	LDR r1, =fileWriteMode
-	BL openFile
-	CMP r0, #0
-	//BLT main_error
-	MOV r7, r0							@ r7 holds file descriptor
 
-	LDR r2, =messageBuffer						@ r2 = pointer to message
-	MOV r4, #0							@ r4 = index
+//	LDR r1, =fileWriteMode
+//	BL openFile
+//	CMP r0, #0
+//	//BLT main_error
+//	MOV r7, r0							@ r7 holds file descriptor
 
-encrypt_loop:
-	@ Loop through each character of the message
-	@ Load the current character from the message
-	LDRB r1, [r2, r4]						@ Load byte at index
-	@ Check if we reached the end of the string (null terminator)
-	CMP r1, #0							@ Check for null terminator
-	BEQ encrypt_done
+//	LDR r2, =messageBuffer				@ r2 = pointer to message
+//	MOV r4, #0							@ r4 = index
 
-	MOV r3, r2							//Save message buffer
+//encrypt_loop:
+//	@ Loop through each character of the message
+//	@ Load the current character from the message
+//	LDRB r1, [r2, r4]					@ Load byte at index
+//	@ Check if we reached the end of the string (null terminator)
+//	CMP r1, #0							@ Check for null terminator
+//	BEQ encrypt_done
 
-	MOV r0, r1 							@ r0 = character
-	MOV r1, r5							@ r1 = exponent
-	MOV r2, r6							@ r2 = modulus
-	@ Encrypt the character m using RSA: c = m^e % n
-	@ Call the encrypt function with m (r1), e (r5), n (r6)
-	BL encrypt							@ r0 = encrypted byte
-	MOV r2, r3							//Restore message buffer
+//	MOV r0, r1 							@ r0 = character
+//	MOV r1, r5							@ r1 = exponent
+//	MOV r2, r6							@ r2 = modulus
+//	@ Encrypt the character m using RSA: c = m^e % n
+//	@ Call the encrypt function with m (r1), e (r5), n (r6)
+//	BL encrypt							@ r0 = encrypted byte
 
-	MOV r1, r0							@ r1 = encrypted value
-	LDR r3, =oneByteBuf
-	STRB r1, [r3]							@ Store encrypted byte
-	MOV r1, r3 							@ r1 = address of buffer
-	MOV r3, #1 							@ r2 = byte count
-	MOV r0, r7							@ r0 = file descriptor
-	@ Write the ciphertext to the file
-	BL writeToFile
+//	MOV r1, r0							@ r1 = encrypted value
+//	LDR r2, =oneByteBuf
+//	STRB r1, [r2]						@ Store encrypted byte
+//	MOV r1, r2 							@ r1 = address of buffer
+//	MOV r2, #1 							@ r2 = byte count
+//	MOV r0, r7							@ r0 = file descriptor
+//	@ Write the ciphertext to the file
+//	BL writeToFile
 
-	ADD r4, r4, #1
-	B encrypt_loop
+//	ADD r4, r4, #1
+//	B encrypt_loop
 
-encrypt_done:
-	MOV r0, r7
-	@ Close the file after writing
-	BL closeFile
+//encrypt_done:
+//	MOV r0, r7
+//	@ Close the file after writing
+//	BL closeFile
 
-	B MenuLoop
+//	B MenuLoop
 
-@ ----- END ENCRYPT SECTION ------
+//@ ----- END ENCRYPT SECTION ------
+
 
 //Start decrypt section
 
-DecryptSection:
+//DecryptSection:
 
 	// Function: decrypt.s
 	// Input: c (ciphertext), d (private key), n
 	// Output: m (decrypted text)
 	// Write decrypted text to "plaintext.txt"
- 	LDR r0, =decryptPrompt		// Display prompt
-	BL printf
+// 	LDR r0, =decryptPrompt		// Display prompt
+//	BL printf
     
-	LDR r0, =encryptedFile		//The name of the file
-	LDR r1, =fileReadMode		//(encrypted.text, to be decrypted and written into plaintext.txt)
-	BL openFile
-	MOV r9, r0			//Save input file to r9
+    
+//	LDR r0, =encryptedFile		//The name of the file
+//	LDR r1, =fileReadMode		//(encrypted.text, to be decrypted and written into plaintext.txt)
+//	BL openFile
+//	MOV r9, r0			//Save input file to r7
 
-	LDR r0, =plaintextFile		//Open the file to be written to
-	LDR r1, =fileWriteMode		
-	BL openFile
-	MOV r8, r0			//Save output file to r8
 
-decrypt_loop:
+//	LDR r0, =plaintextFile		//Open the file to be written to
+//	LDR r1, =fileWriteMode		
+//	BL openFile
+//	MOV r8, r0			//Save output file to r8
+
+//decrypt_loop:
 	//Read the next encrypted character
-	MOV r0, r9			//Input file 
-	LDR r1, =cipherTextBuffer	//Buffer to store the encrypted character
-	BL readFromFile			//Read the number into the buffer
-	CMP r0, #0			//Check if we're at the end of the file
-	BEQ decrypt_done		//And exit if we are
+//	MOV r0, r9			//Input file 
+//	LDR r1, =cipherTextBuffer	//Buffer to store the encrypted character
+//	BL readFromFile			//Read the number into the buffer
+//	CMP r0, #0			//Check if we're at the end of the file
+//	BEQ decrypt_done		//And exit if we are
 
-	LDR r1, =cipherTextBuffer	//Load ciphertext into r1
-	STRB r1, [r1]
+//	LDR r1, =cipherTextBuffer	//Load ciphertext into r1
+//	STRB r1, [r1]
 
-	MOV r0, r1			//r0 = character to be decrypted
-	MOV r1, r5			//r1 = private exponent d
-	MOV r2, r6			//r2 = modulus n
-	BL decrypt			//plaintext character return in r0
+//	MOV r0, r1			//r0 = character to be decrypted
+//	MOV r1, r5			//r1 = private exponent d
+//	MOV r2, r6			//r2 = modulus n
+//	BL decrypt			//plaintext character return in r0
 
-	LDR r0, =plaintextBuffer
-	STRB r0, [r0]			//Save character to the plaintext buffer
+//	LDR r0, =plaintextBuffer
+//	STRB r0, [r0]			//Save character to the plaintext buffer
 
-	MOV r0, r8			//Reload output file
-	LDR r1, =plaintextBuffer	
-	MOV r2, #1			//Write 1 byte
-	BL writeToFile
+//	MOV r0, r8			//Reload output file
+//	LDR r1, =plaintextBuffer	
+//	MOV r2, #1			//Write 1 byte
+//	BL writeToFile
 
-	B encrypt_loop			//Repeat until characters are exhausted
+//	B encrypt_loop			//Repeat until characters are exhausted
 
-decrypt_done:
-	MOV r0, r9			//Close both files
-	BL closeFile
+//decrypt_done:
+//	MOV r0, r9			//Close both files
+//	BL closeFile
 
-	MOV r0, r8
-	BL closeFile
+//	MOV r0, r8
+//	BL closeFile
 	// Function: decrypt.s
 	// Input: c (ciphertext), d (private key), n
 	// Output: m (decrypted text)
 	// Write decrypted text to "plaintext.txt"
 
-	B MenuLoop
+//	B MenuLoop
 
-EndProgram:
+//EndProgram:
 
 	// pop stack record
 	LDR lr, [sp, #0]
@@ -305,6 +325,9 @@ EndProgram:
 	// Error messages
 	p_ErrorMsg1: .asciz "Invalid p value. Requirement: 0 <= p < 50, and must be prime.\n"
 	q_ErrorMsg1: .asciz "Invalid q value. Requirement: 0 <= q < 50, and must be prime.\n"
+	// Outputs
+	testingOutput: .asciz "The value for p is %d.\nThe value for q is %d.\nThe value for modulus (n) is %d.\n"
+	testingOutput2: .asciz "The value for the totient is %d.\nThe value for public key (e) is %d.\nThe value for private key (d) is %d.\n\n"
 
 @ ----- .data for the Encrypt section ----
 	messagePrompt: .asciz "Please enter the message to encrypt: \n"		@ Prompt user to enter a message
