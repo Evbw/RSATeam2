@@ -179,12 +179,15 @@ EncryptSection:
 	LDR r0, =messagePrompt
 	BL printf
 
-	LDR r0, =inputFormat				@ scanf format: "%s"
+	BL getchar
+
+	LDR r0, =inputFormat				@ scanf format: "%[^\n]"
 	LDR r1, =messageBuffer				@ store input here
 	BL scanf
 	@ Read message from user input into messageBuffer
 
 	LDR r0, =cipherTextFile
+
 //	LDR r1, =fileWriteMode
 //	BL openFile
 //	CMP r0, #0
@@ -230,6 +233,7 @@ EncryptSection:
 
 //@ ----- END ENCRYPT SECTION ------
 
+
 //Start decrypt section
 
 //DecryptSection:
@@ -241,10 +245,12 @@ EncryptSection:
 // 	LDR r0, =decryptPrompt		// Display prompt
 //	BL printf
     
+    
 //	LDR r0, =encryptedFile		//The name of the file
 //	LDR r1, =fileReadMode		//(encrypted.text, to be decrypted and written into plaintext.txt)
 //	BL openFile
 //	MOV r9, r0			//Save input file to r7
+
 
 //	LDR r0, =plaintextFile		//Open the file to be written to
 //	LDR r1, =fileWriteMode		
