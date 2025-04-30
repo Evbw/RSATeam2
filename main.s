@@ -8,21 +8,24 @@
 .global main
 
 main:
-    // Program dictionary:
-    // r4 - public key (e)
-    // r5 - private key (d)
-    // r6 - totient
-    // r7 - modulus (n)
+	// Program dictionary:
+	// r4 - public key (e)
+	// r5 - private key (d)
+	// r6 - totient
+	// r7 - modulus (n)
 
-    // r8 -
-    // r9 - 
-    // r10 -
-    // r11 -
-    // r12 -
+	// r8 -
+	// r9 - 
+	// r10 -
+	// r11 -
+	// r12 -
 
-    // push stack record
-    SUB sp, sp, #4
-    STR lr, [sp]
+	// push stack record
+	SUB sp, sp, #4
+	STR lr, [sp, #0]
+
+	LDR r0, =introPrompt
+	BL printf
 
     // Request p, q from Receiver; ensure p and q meet requirements
     // Loop for p value. p must be prime and < 50.
@@ -58,7 +61,7 @@ main:
             BL printf
             B p_StartLoop
 
-    p_EndLoop:
+	p_EndLoop:
 
     // Loop for q value. q must be prime and < 50.
     q_StartLoop:
@@ -93,32 +96,55 @@ main:
             BL printf
             B q_StartLoop
 
-    q_EndLoop:
+	q_EndLoop:
 
 
-    // Receiver generates public key
-    // Function: cpubexp.s
-    // Inputs: r0 = p, r1 = q
-    // Output: r0 = e (public key), r1 = totient, r2 = n
-    LDR r0, =pValue
-    LDR r0, [r0]
-    LDR r1, =qValue
-    LDR r1, [r1]
-    BL cpubexp
-    // Store outputs in program dictionary
-    MOV r4, r0
-    MOV r6, r1
-    MOV r7, r2
+	// Receiver generates public key
+	// Function: cpubexp.s
+	// Inputs: r0 = p, r1 = q
+	// Output: r0 = e (public key), r1 = totient, r2 = n
+	LDR r0, =pValue
+	LDR r0, [r0]
+	LDR r1, =qValue
+	LDR r1, [r1]
+	BL cpubexp
+	// Store outputs in program dictionary
+	MOV r4, r0
+	MOV r6, r1
+	MOV r7, r2
 
 
-    // Receiver generates private key
-    // Function: cprivexp.s
-    // Input: r0 = e (public key), r1 = totient
-    // Output: r0 = d (private key)
-    BL cprivexp
-    // Store outputs in program dictionary
-    MOV r5, r0
+	// Receiver generates private key
+	// Function: cprivexp.s
+	// Input: r0 = e (public key), r1 = totient
+	// Output: r0 = d (private key)
+	BL cprivexp
+	// Store outputs in program dictionary
+	MOV r5, r0
+	B MenuLoop
 
+	//Enter Main Menu
+
+	MenuLoop:
+
+	LDR r0, =menuPrompt
+	BL printf
+
+	LDR r0, =input
+	LDR r1, =num
+	BL scanf
+
+	LDR r0, =num
+	LDR r0, [r0]
+
+	CMP r0, #-1
+	BLE EndProgram
+	CMP r0, #1
+	BEQ p_StartLoop
+	CMP r0, #2
+	BEQ EncryptSection
+	CMP r0, #3
+	BGE DecryptSection
 
     // Request message to encrypt, using public key, from Sender
     // for (character in message) { encrypt char and write in "encrypted.txt" }
@@ -129,7 +155,7 @@ main:
 
 
 @ ----- START ENCRYPT SECTION -----
-
+EncryptSection:
 	@ Request a message from the user to be encrypted
 	LDR r0, =messagePrompt
 	BL printf
@@ -181,9 +207,14 @@ encrypt_done:
 	@ Close the file after writing
 	BL closeFile
 
+	B MenuLoop
+
 @ ----- END ENCRYPT SECTION ------
 
 //Start decrypt section
+
+DecryptSection:
+
 	// Function: decrypt.s
 	// Input: c (ciphertext), d (private key), n
 	// Output: m (decrypted text)
@@ -238,13 +269,19 @@ decrypt_done:
 	// Output: m (decrypted text)
 	// Write decrypted text to "plaintext.txt"
 
+	B MenuLoop
+
+EndProgram:
+
 	// pop stack record
-	LDR lr, [sp]
+	LDR lr, [sp, #0]
 	ADD sp, sp, #4
 	MOV pc, lr
 
 .data
 	// Prompts
+	introPrompt: .asciz "Welcome to our RSA algorithm program. We first require a cipher:\n"
+	menuPrompt: .asciz "Please choose an encryption (1), encrypt a message using that cipher (2), or decrypt a message using that cipher (3), or exit the program (-1):\n"
 	prompt1: .asciz "Receiver, input a positive prime value < 50 for p: \n"
 	prompt2: .asciz "Receiver, input a positive prime value < 50 for q: \n"
 	decryptPrompt: .asciz "Searching for a file named encrypted.txt:\n"
@@ -252,6 +289,8 @@ decrypt_done:
 	format1: .asciz "%d"
 	decryptFormat: .asciz "%s"
 	inputFormat: .asciz "%[^\n]"
+	input: .asciz "%d"
+	num: .word 0
 	
 	// Stored values
 
