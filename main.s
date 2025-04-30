@@ -160,7 +160,9 @@ EncryptSection:
 	LDR r0, =messagePrompt
 	BL printf
 
-	LDR r0, =inputFormat				@ scanf format: "%s"
+	BL getchar
+
+	LDR r0, =inputFormat				@ scanf format: "%[^\n]"
 	LDR r1, =messageBuffer				@ store input here
 	BL scanf
 	@ Read message from user input into messageBuffer
@@ -172,16 +174,18 @@ EncryptSection:
 	//BLT main_error
 	MOV r7, r0							@ r7 holds file descriptor
 
-	LDR r2, =messageBuffer				@ r2 = pointer to message
+	LDR r2, =messageBuffer						@ r2 = pointer to message
 	MOV r4, #0							@ r4 = index
 
 encrypt_loop:
 	@ Loop through each character of the message
 	@ Load the current character from the message
-	LDRB r1, [r2, r4]					@ Load byte at index
+	LDRB r1, [r2, r4]						@ Load byte at index
 	@ Check if we reached the end of the string (null terminator)
 	CMP r1, #0							@ Check for null terminator
 	BEQ encrypt_done
+
+	MOV r3, r2							//Save message buffer
 
 	MOV r0, r1 							@ r0 = character
 	MOV r1, r5							@ r1 = exponent
@@ -189,12 +193,13 @@ encrypt_loop:
 	@ Encrypt the character m using RSA: c = m^e % n
 	@ Call the encrypt function with m (r1), e (r5), n (r6)
 	BL encrypt							@ r0 = encrypted byte
+	MOV r2, r3							//Restore message buffer
 
 	MOV r1, r0							@ r1 = encrypted value
-	LDR r2, =oneByteBuf
-	STRB r1, [r2]						@ Store encrypted byte
-	MOV r1, r2 							@ r1 = address of buffer
-	MOV r2, #1 							@ r2 = byte count
+	LDR r3, =oneByteBuf
+	STRB r1, [r3]							@ Store encrypted byte
+	MOV r1, r3 							@ r1 = address of buffer
+	MOV r3, #1 							@ r2 = byte count
 	MOV r0, r7							@ r0 = file descriptor
 	@ Write the ciphertext to the file
 	BL writeToFile
@@ -225,7 +230,7 @@ DecryptSection:
 	LDR r0, =encryptedFile		//The name of the file
 	LDR r1, =fileReadMode		//(encrypted.text, to be decrypted and written into plaintext.txt)
 	BL openFile
-	MOV r9, r0			//Save input file to r7
+	MOV r9, r0			//Save input file to r9
 
 	LDR r0, =plaintextFile		//Open the file to be written to
 	LDR r1, =fileWriteMode		
