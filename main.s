@@ -178,64 +178,63 @@ main:
 	LDR r0, =messagePrompt
 	BL printf
 
-	BL getchar
-	LDR r0, =inputFormat            // scanf format: "%[^\n]"
+	//BL getchar
+	//LDR r0, =inputFormat            // scanf format: "%[^\n]"
+	LDR r0, =stringFormat
 	LDR r1, =messageBuffer	        // store input here
 	BL scanf
 
-	LDR r0, =cipherTextFile
-	LDR r1, =fileWriteMode
-	BL fopen
-    	LDR r1, =fp
-    	STR r0, [r1]        		// Save file pointer
+	//LDR r0, =cipherTextFile
+	//LDR r1, =fileWriteMode
+	//BL fopen
+    	//LDR r1, =fp
+    	//STR r0, [r1]        		// Save file pointer
 
 	// Intialization for encrypt loop
-	LDR r2, =messageBuffer		// r2 = pointer to message
+	LDR r2, =messageBuffer		// r2 = user message
 	MOV r8, #0			// r8 = index
 
 encrypt_loop:
 	// Loop through each character of the message
 	// Load the current character from the message
-	LDRB r1, [r2, r8]			// Load byte at index
+	//LDRB r1, [r2, r8]			// Load byte at index
 	// Check if we reached the end of the string (null terminator)
-	CMP r1, #0			// Check for null terminator
+	
+	//CMP r1, #0			// Check for null terminator
+	LDRB r3, [r2]
+	CMP r3, #0
 	BEQ encrypt_done
 
-	MOV r0, r1 			// r0 = character
-	MOV r1, r4			// r1 = exponent
-	MOV r2, r7			// r2 = modulus
+	//MOV r0, r1 			// r0 = character
+	//MOV r1, r4			// r1 = exponent
+	//MOV r2, r7			// r2 = modulus
 
 	// Encrypt the character m using RSA: c = m^e % n
 	// Call the encrypt function with m (r1), e (r5), n (r6)
-	BL encrypt			// r0 = encrypted byte
+	//BL encrypt			// r0 = encrypted byte
 
 	//MOV r1, r0
-	//LDR r0, =testingOutput3
-	//BL printf
-
-	//MOV r1, r0			// r1 = encrypted value
-	//LDR r2, =oneByteBuf
-	//STRB r1, [r2]			// Store encrypted byte
-	//MOV r1, r2 			// r1 = address of buffer
-	//MOV r2, #1 			// r2 = byte count
+	MOV r1, r3
+	LDR r0, =testingOutput4
+	BL printf
 
  	// Write the ciphertext to the file
-    	// fprintf(fp, msg2)
-	MOV r2, r0
-	LDR r1, =writingFormat
-	LDR r3, =fp
-    	LDR r0, [r3]
-	BL fprintf
+    	// fprintf(fp, format %d, integer)
+	//LDR r1, =randomString
+	//LDR r3, =fp
+    	//LDR r0, [r3]
+	//BL fprintf
 
 	// Loop to the next message index
-	ADD r8, r8, #1
+	//ADD r8, r8, #1
+	ADD r2, r2, #1
 	B encrypt_loop
 
 encrypt_done:
     	// fclose(fp)
-    	LDR r1, =fp
-    	LDR r0, [r1]
-    	BL fclose
+    	//LDR r1, =fp
+    	//LDR r0, [r1]
+    	//BL fclose
 
 //@ ----- END ENCRYPT SECTION ------
 
@@ -318,7 +317,8 @@ encrypt_done:
 	decryptPrompt: .asciz "Searching for a file named encrypted.txt:\n"
 	// Formats 
 	format1: .asciz "%d"
-	decryptFormat: .asciz "%s"
+	stringFormat: .asciz "%s"
+	decryptFormat: .asciz "%s"  // delete?
 	inputFormat: .asciz "%[^\n]"
 	input: .asciz "%d"
 	num: .word 0
@@ -335,6 +335,7 @@ encrypt_done:
 	testingOutput: .asciz "The value for p is %d.\nThe value for q is %d.\nThe value for modulus (n) is %d.\n"
 	testingOutput2: .asciz "The value for the totient is %d.\nThe value for public key (e) is %d.\nThe value for private key (d) is %d.\n\n"
 	testingOutput3: .asciz "The ciphertext is %d.\n\n"
+	testingOutput4: .asciz "%c\n"
 
 @ ----- .data for the Encrypt section ----
 	messagePrompt: .asciz "Please enter the message to encrypt: \n"		@ Prompt user to enter a message
@@ -342,7 +343,7 @@ encrypt_done:
 	messageLength: .word 100						@ Maximum length for the message
 	cipherTextFile: .asciz "encrypted.txt"
 	oneByteBuf: .byte 0
-	writingFormat: .asciz "%d "
+	randomString: .asciz "Please write this in encrypt.txt"
 
 	//decrypt
 	encryptedFile: .asciz "encrypted.txt"
