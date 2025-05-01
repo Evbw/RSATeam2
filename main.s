@@ -13,7 +13,7 @@ main:
 	// r5 - private key (d)
 	// r6 - totient
 	// r7 - modulus (n)
-	// r8 - encrypt index
+	// r8 - encrypt, message index register
 	// r9 - 
 	// r10 -
 	// r11 -
@@ -179,8 +179,7 @@ main:
 	BL printf
 
 	//BL getchar
-	//LDR r0, =inputFormat            // scanf format: "%[^\n]"
-	LDR r0, =stringFormat
+	LDR r0, =inputFormat            // scanf format: "%[^\n]"
 	LDR r1, =messageBuffer	        // store input here
 	BL scanf
 
@@ -191,8 +190,8 @@ main:
     	//STR r0, [r1]        		// Save file pointer
 
 	// Intialization for encrypt loop
-	LDR r2, =messageBuffer		// r2 = user message
-	MOV r8, #0			// r8 = index
+	LDR r8, =messageBuffer		// r8 = user message
+	//MOV r8, #0			// r8 = index
 
 encrypt_loop:
 	// Loop through each character of the message
@@ -201,7 +200,7 @@ encrypt_loop:
 	// Check if we reached the end of the string (null terminator)
 	
 	//CMP r1, #0			// Check for null terminator
-	LDRB r3, [r2]
+	LDRB r3, [r8]
 	CMP r3, #0
 	BEQ encrypt_done
 
@@ -226,8 +225,7 @@ encrypt_loop:
 	//BL fprintf
 
 	// Loop to the next message index
-	//ADD r8, r8, #1
-	ADD r2, r2, #1
+	ADD r8, r8, #1
 	B encrypt_loop
 
 encrypt_done:
@@ -317,7 +315,7 @@ encrypt_done:
 	decryptPrompt: .asciz "Searching for a file named encrypted.txt:\n"
 	// Formats 
 	format1: .asciz "%d"
-	stringFormat: .asciz "%s"
+	stringFormat: .asciz "%s"  // delete?
 	decryptFormat: .asciz "%s"  // delete?
 	inputFormat: .asciz "%[^\n]"
 	input: .asciz "%d"
