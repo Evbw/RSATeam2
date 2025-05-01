@@ -209,9 +209,9 @@ encrypt_loop:
 	// Call the encrypt function with m (r1), e (r5), n (r6)
 	BL encrypt			// r0 = encrypted byte
 
-	MOV r1, r0
-	LDR r0, =testingOutput3
-	BL printf
+	//MOV r1, r0
+	//LDR r0, =testingOutput3
+	//BL printf
 
 	//MOV r1, r0			// r1 = encrypted value
 	//LDR r2, =oneByteBuf
@@ -221,10 +221,10 @@ encrypt_loop:
 
  	// Write the ciphertext to the file
     	// fprintf(fp, msg2)
-	//MOV r1, r0
-	//LDR r2, =fp
-    	//LDR r0, [r2]
-	//BL fprintf
+	MOV r1, r0
+	LDR r2, =fp
+    	LDR r0, [r2]
+	BL fprintf
 
 	// Loop to the next message index
 	ADD r8, r8, #1
