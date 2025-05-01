@@ -73,6 +73,7 @@ main:
 
 		MOV r0, r7
 		MOV r1, r6
+		MOV r2, r8
 
 		BL pow
 		MOV r1, r0

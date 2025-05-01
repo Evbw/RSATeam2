@@ -13,8 +13,7 @@ main:
 	// r5 - private key (d)
 	// r6 - totient
 	// r7 - modulus (n)
-
-	// r8 -
+	// r8 - encrypt, message index register
 	// r9 - 
 	// r10 -
 	// r11 -
@@ -174,64 +173,65 @@ main:
 
 
 @ ----- START ENCRYPT SECTION -----
-EncryptSection:
-	@ Request a message from the user to be encrypted
+
+	// Request a message from the user to be encrypted
 	LDR r0, =messagePrompt
 	BL printf
 
-	BL getchar
-
-	LDR r0, =inputFormat				@ scanf format: "%[^\n]"
-	LDR r1, =messageBuffer				@ store input here
+	LDR r0, =stringFormat            // scanf format: "%s"
+	LDR r1, =messageBuffer	        // store input here
 	BL scanf
-	@ Read message from user input into messageBuffer
 
 	LDR r0, =cipherTextFile
+	LDR r1, =fileWriteMode
+	BL fopen
+    	LDR r1, =fp
+    	STR r0, [r1]        		// Save file pointer
 
-//	LDR r1, =fileWriteMode
-//	BL openFile
-//	CMP r0, #0
-//	//BLT main_error
-//	MOV r7, r0							@ r7 holds file descriptor
+	// Intialization for encrypt loop
+	LDR r8, =messageBuffer		// r8 = user message
 
-//	LDR r2, =messageBuffer				@ r2 = pointer to message
-//	MOV r4, #0							@ r4 = index
+encrypt_loop:
+	// Loop through each character of the message
+	// Load the current character from the message
 
-//encrypt_loop:
-//	@ Loop through each character of the message
-//	@ Load the current character from the message
-//	LDRB r1, [r2, r4]					@ Load byte at index
-//	@ Check if we reached the end of the string (null terminator)
-//	CMP r1, #0							@ Check for null terminator
-//	BEQ encrypt_done
+	LDRB r3, [r8]
+	CMP r3, #0
+	BEQ encrypt_done
 
-//	MOV r0, r1 							@ r0 = character
-//	MOV r1, r5							@ r1 = exponent
-//	MOV r2, r6							@ r2 = modulus
-//	@ Encrypt the character m using RSA: c = m^e % n
-//	@ Call the encrypt function with m (r1), e (r5), n (r6)
-//	BL encrypt							@ r0 = encrypted byte
+	MOV r0, r3 			// r0 = character
+	MOV r1, r4			// r1 = exponent
+	MOV r2, r7			// r2 = modulus
 
-//	MOV r1, r0							@ r1 = encrypted value
-//	LDR r2, =oneByteBuf
-//	STRB r1, [r2]						@ Store encrypted byte
-//	MOV r1, r2 							@ r1 = address of buffer
-//	MOV r2, #1 							@ r2 = byte count
-//	MOV r0, r7							@ r0 = file descriptor
-//	@ Write the ciphertext to the file
-//	BL writeToFile
+	// Encrypt the character m using RSA: c = m^e % n
+	// Call the encrypt function with m (r1), e (r5), n (r6)
+	BL encrypt			// r0 = encrypted byte
 
-//	ADD r4, r4, #1
-//	B encrypt_loop
+	// PRINT TEST
+	//MOV r9, r0
+	//MOV r1, r0
+	//LDR r0, =testingOutput3
+	//BL printf
 
-//encrypt_done:
-//	MOV r0, r7
-//	@ Close the file after writing
-//	BL closeFile
+ 	// Write the ciphertext to the file
+    	// fprintf(fp, format %d, integer)
+	MOV r2, r0
+	LDR r1, =encryptWritingFormat
+	LDR r3, =fp
+    	LDR r0, [r3]
+	BL fprintf
 
-//	B MenuLoop
+	// Loop to the next message index
+	ADD r8, r8, #1
+	B encrypt_loop
 
-//@ ----- END ENCRYPT SECTION ------
+encrypt_done:
+    	// fclose(fp)
+    	LDR r1, =fp
+    	LDR r0, [r1]
+    	BL fclose
+
+@ ----- END ENCRYPT SECTION ------
 
 
 //Start decrypt section
@@ -312,7 +312,8 @@ EncryptSection:
 	decryptPrompt: .asciz "Searching for a file named encrypted.txt:\n"
 	// Formats 
 	format1: .asciz "%d"
-	decryptFormat: .asciz "%s"
+	stringFormat: .asciz "%s"  // delete?
+	decryptFormat: .asciz "%s"  // delete?
 	inputFormat: .asciz "%[^\n]"
 	input: .asciz "%d"
 	num: .word 0
@@ -331,10 +332,15 @@ EncryptSection:
 
 @ ----- .data for the Encrypt section ----
 	messagePrompt: .asciz "Please enter the message to encrypt: \n"		@ Prompt user to enter a message
+	// Formats
+	encryptWritingFormat: .asciz "%d\n"
+	// Stored variables
 	messageBuffer: .space 255						@ Space to store the message (up to 100 characters)
 	messageLength: .word 100						@ Maximum length for the message
 	cipherTextFile: .asciz "encrypted.txt"
 	oneByteBuf: .byte 0
+
+
 	//decrypt
 	encryptedFile: .asciz "encrypted.txt"
 	plaintextFile: .asciz "plaintext.txt"
@@ -342,3 +348,7 @@ EncryptSection:
 	fileWriteMode: .asciz "w"
 	cipherTextBuffer: .space 4
 	plaintextBuffer: .space 1
+
+.bss
+	fp: .skip 4     // file pointer (32-bit)
+
