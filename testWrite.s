@@ -18,13 +18,15 @@ main:
     	bl fprintf
 
     	// fprintf(fp, msg2)
-    	ldr r0, [fp]
+    	ldr r1, =fp
+    	ldr r0, [r1]
     	ldr r1, =msg2
     	bl fprintf
 
     	// fclose(fp)
-    	ldr r0, [fp]
-	bl fclose
+    	ldr r1, =fp
+    	ldr r0, [r1]
+    	bl fclose
 
     	mov r0, #0
 
