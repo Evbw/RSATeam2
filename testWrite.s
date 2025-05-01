@@ -18,9 +18,17 @@ main:
     	bl fprintf
 
     	// fprintf(fp, msg2)
-    	ldr r1, =fp
-    	ldr r0, [r1]
-    	ldr r1, =msg2
+	LDR r0, =prompt
+	BL printf
+	LDR r0, =format
+	LDR r1, =msg2
+	BL scanf
+
+	LDR r2, =msg2
+	LDR r2, [r2]
+	LDR r1, =format
+    	ldr r3, =fp
+    	ldr r0, [r3]
     	bl fprintf
 
     	// fclose(fp)
@@ -36,13 +44,15 @@ main:
 	MOV pc, lr
 
 .data
+	// Prompt
+	prompt: .asciz "Enter a number: \n"
 	filename:  .asciz "encrypted.txt"
 	w_mode:    .asciz "w"
 	msg1:      .asciz "This is a secret message.\n"
-	msg2:      .asciz "Another encrypted line.\n"
+	format: .asciz "%d"
+	msg2:      .word 0
 
 .bss
+
 	fp: .skip 4     @ file pointer (32-bit)
-
-
 
