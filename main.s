@@ -13,8 +13,7 @@ main:
 	// r5 - private key (d)
 	// r6 - totient
 	// r7 - modulus (n)
-
-	// r8 -
+	// r8 - encrypt index
 	// r9 - 
 	// r10 -
 	// r11 -
@@ -174,7 +173,7 @@ main:
 
 
 @ ----- START ENCRYPT SECTION -----
-EncryptSection:
+
 	// Request a message from the user to be encrypted
 	LDR r0, =messagePrompt
 	BL printf
@@ -191,39 +190,44 @@ EncryptSection:
     	STR r0, [r1]        		// Save file pointer
 
 	// Intialization for encrypt loop
-	LDR r2, =messageBuffer			// r2 = pointer to message
-	MOV r4, #0				// r4 = index
+	LDR r2, =messageBuffer		// r2 = pointer to message
+	MOV r8, #0			// r8 = index
 
 encrypt_loop:
 	// Loop through each character of the message
 	// Load the current character from the message
-	LDRB r1, [r2, r4]			// Load byte at index
+	LDRB r1, [r2, r8]			// Load byte at index
 	// Check if we reached the end of the string (null terminator)
 	CMP r1, #0			// Check for null terminator
 	BEQ encrypt_done
 
 	MOV r0, r1 			// r0 = character
-	MOV r1, r5			// r1 = exponent
-	MOV r2, r6			// r2 = modulus
+	MOV r1, r4			// r1 = exponent
+	MOV r2, r7			// r2 = modulus
 
 	// Encrypt the character m using RSA: c = m^e % n
 	// Call the encrypt function with m (r1), e (r5), n (r6)
 	BL encrypt			// r0 = encrypted byte
 
-	MOV r1, r0			// r1 = encrypted value
-	LDR r2, =oneByteBuf
-	STRB r1, [r2]			// Store encrypted byte
-	MOV r1, r2 			// r1 = address of buffer
-	MOV r2, #1 			// r2 = byte count
+	MOV r1, r0
+	LDR r0, =testingOutput3
+	BL printf
+
+	//MOV r1, r0			// r1 = encrypted value
+	//LDR r2, =oneByteBuf
+	//STRB r1, [r2]			// Store encrypted byte
+	//MOV r1, r2 			// r1 = address of buffer
+	//MOV r2, #1 			// r2 = byte count
 
  	// Write the ciphertext to the file
     	// fprintf(fp, msg2)
-    	LDR r1, =fp
-    	LDR r0, [r1]
-	BL fprintf
+	//MOV r1, r0
+	//LDR r2, =fp
+    	//LDR r0, [r2]
+	//BL fprintf
 
 	// Loop to the next message index
-	ADD r4, r4, #1
+	ADD r8, r8, #1
 	B encrypt_loop
 
 encrypt_done:
@@ -231,8 +235,6 @@ encrypt_done:
     	LDR r1, =fp
     	LDR r0, [r1]
     	BL fclose
-
-	B MenuLoop
 
 //@ ----- END ENCRYPT SECTION ------
 
@@ -331,6 +333,7 @@ encrypt_done:
 	// Outputs
 	testingOutput: .asciz "The value for p is %d.\nThe value for q is %d.\nThe value for modulus (n) is %d.\n"
 	testingOutput2: .asciz "The value for the totient is %d.\nThe value for public key (e) is %d.\nThe value for private key (d) is %d.\n\n"
+	testingOutput3: .asciz "The ciphertext is %d.\n\n"
 
 @ ----- .data for the Encrypt section ----
 	messagePrompt: .asciz "Please enter the message to encrypt: \n"		@ Prompt user to enter a message
