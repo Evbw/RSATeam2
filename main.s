@@ -221,9 +221,10 @@ encrypt_loop:
 
  	// Write the ciphertext to the file
     	// fprintf(fp, msg2)
-	MOV r1, r0
-	LDR r2, =fp
-    	LDR r0, [r2]
+	MOV r2, r0
+	LDR r1, =writingFormat
+	LDR r3, =fp
+    	LDR r0, [r3]
 	BL fprintf
 
 	// Loop to the next message index
@@ -341,6 +342,8 @@ encrypt_done:
 	messageLength: .word 100						@ Maximum length for the message
 	cipherTextFile: .asciz "encrypted.txt"
 	oneByteBuf: .byte 0
+	writingFormat: .asciz "%d "
+
 	//decrypt
 	encryptedFile: .asciz "encrypted.txt"
 	plaintextFile: .asciz "plaintext.txt"
