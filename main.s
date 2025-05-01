@@ -178,51 +178,48 @@ main:
 	LDR r0, =messagePrompt
 	BL printf
 
-	//BL getchar
-	LDR r0, =inputFormat            // scanf format: "%[^\n]"
+	LDR r0, =stringFormat            // scanf format: "%s"
 	LDR r1, =messageBuffer	        // store input here
 	BL scanf
 
-	//LDR r0, =cipherTextFile
-	//LDR r1, =fileWriteMode
-	//BL fopen
-    	//LDR r1, =fp
-    	//STR r0, [r1]        		// Save file pointer
+	LDR r0, =cipherTextFile
+	LDR r1, =fileWriteMode
+	BL fopen
+    	LDR r1, =fp
+    	STR r0, [r1]        		// Save file pointer
 
 	// Intialization for encrypt loop
 	LDR r8, =messageBuffer		// r8 = user message
-	//MOV r8, #0			// r8 = index
 
 encrypt_loop:
 	// Loop through each character of the message
 	// Load the current character from the message
-	//LDRB r1, [r2, r8]			// Load byte at index
-	// Check if we reached the end of the string (null terminator)
-	
-	//CMP r1, #0			// Check for null terminator
+
 	LDRB r3, [r8]
 	CMP r3, #0
 	BEQ encrypt_done
 
-	//MOV r0, r1 			// r0 = character
-	//MOV r1, r4			// r1 = exponent
-	//MOV r2, r7			// r2 = modulus
+	MOV r0, r3 			// r0 = character
+	MOV r1, r4			// r1 = exponent
+	MOV r2, r7			// r2 = modulus
 
 	// Encrypt the character m using RSA: c = m^e % n
 	// Call the encrypt function with m (r1), e (r5), n (r6)
-	//BL encrypt			// r0 = encrypted byte
+	BL encrypt			// r0 = encrypted byte
 
+	// PRINT TEST
+	//MOV r9, r0
 	//MOV r1, r0
-	MOV r1, r3
-	LDR r0, =testingOutput4
-	BL printf
+	//LDR r0, =testingOutput3
+	//BL printf
 
  	// Write the ciphertext to the file
     	// fprintf(fp, format %d, integer)
-	//LDR r1, =randomString
-	//LDR r3, =fp
-    	//LDR r0, [r3]
-	//BL fprintf
+	MOV r2, r0
+	LDR r1, =encryptWritingFormat
+	LDR r3, =fp
+    	LDR r0, [r3]
+	BL fprintf
 
 	// Loop to the next message index
 	ADD r8, r8, #1
@@ -230,11 +227,11 @@ encrypt_loop:
 
 encrypt_done:
     	// fclose(fp)
-    	//LDR r1, =fp
-    	//LDR r0, [r1]
-    	//BL fclose
+    	LDR r1, =fp
+    	LDR r0, [r1]
+    	BL fclose
 
-//@ ----- END ENCRYPT SECTION ------
+@ ----- END ENCRYPT SECTION ------
 
 
 //Start decrypt section
@@ -332,16 +329,17 @@ encrypt_done:
 	// Outputs
 	testingOutput: .asciz "The value for p is %d.\nThe value for q is %d.\nThe value for modulus (n) is %d.\n"
 	testingOutput2: .asciz "The value for the totient is %d.\nThe value for public key (e) is %d.\nThe value for private key (d) is %d.\n\n"
-	testingOutput3: .asciz "The ciphertext is %d.\n\n"
-	testingOutput4: .asciz "%c\n"
 
 @ ----- .data for the Encrypt section ----
 	messagePrompt: .asciz "Please enter the message to encrypt: \n"		@ Prompt user to enter a message
+	// Formats
+	encryptWritingFormat: .asciz "%d\n"
+	// Stored variables
 	messageBuffer: .space 255						@ Space to store the message (up to 100 characters)
 	messageLength: .word 100						@ Maximum length for the message
 	cipherTextFile: .asciz "encrypted.txt"
 	oneByteBuf: .byte 0
-	randomString: .asciz "Please write this in encrypt.txt"
+
 
 	//decrypt
 	encryptedFile: .asciz "encrypted.txt"
