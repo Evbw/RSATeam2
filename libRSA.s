@@ -21,11 +21,12 @@
 .text
 
 pow:
-	SUB sp, sp, #16
+	SUB sp, sp, #20
 	STR lr, [sp, #0]
  	STR r5, [sp, #4]
   	STR r6, [sp, #8]
    	STR r7, [sp, #12]
+	STR r8, [sp, #16]
 
 	// Function dictionary
 	// r5 - base
@@ -77,7 +78,8 @@ pow:
  	LDR r5, [sp, #4]
   	LDR r6, [sp, #8]
    	LDR r7, [sp, #12]
-	ADD sp, sp, #16
+	LDR r8, [sp, #16]
+	ADD sp, sp, #20
 	MOV pc, lr
 
 .data
