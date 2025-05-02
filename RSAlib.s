@@ -1,5 +1,5 @@
 #
-# File name: libRSA
+# File name: RSAlib
 # Authors: Ayush Goel, Calvin Tang, Conner Wright, Everett Bowline
 # Editing: Calvin Tang, Everett Bowline
 # Purpose: Serves as the library function for the main RSA program
@@ -40,7 +40,6 @@ pow:
 
 	MOV r2, #0	
 	CMP r6, r2
-
 	BEQ ZeroExp		//If the exponent is zero, handle it
 	BLE NegExp		//If the exponent is negative, dismiss it with a return value of -1
 
