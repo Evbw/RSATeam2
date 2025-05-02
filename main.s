@@ -286,7 +286,7 @@ decrypt_loop:
 	LDR r1, =decryptWritingFormat
 	BL fprintf
 
-	B encrypt_loop			//Repeat until characters are exhausted
+	B decrypt_loop			//Repeat until characters are exhausted
 
 decrypt_done:
 
@@ -307,7 +307,7 @@ decrypt_done:
 
 //	B MenuLoop
 
-//EndProgram:
+EndProgram:
 
 	// pop stack record
 	LDR lr, [sp, #0]
@@ -361,7 +361,7 @@ decrypt_done:
 	plaintextBuffer: .space 1
 	decryptNum: .space 256
 	decryptReadingFormat: .asciz "%d"
-	decryptWritingFormat: .asciz "%d"
+	decryptWritingFormat: .asciz "%c"
 
 .bss
 	fp: .skip 4     // file pointer (32-bit)
