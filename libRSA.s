@@ -40,6 +40,7 @@ pow:
 
 	MOV r2, #0	
 	CMP r6, r2
+
 	BEQ ZeroExp		//If the exponent is zero, handle it
 	BLE NegExp		//If the exponent is negative, dismiss it with a return value of -1
 
