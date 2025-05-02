@@ -32,15 +32,16 @@ pow:
    	STR r7, [sp, #12]
 	STR r8, [sp, #16]
 
+	MOV r8, r7
 	MOV r5, r0		//Store the term in r5 and r7
 	MOV r7, r0
 	MOV r6, r1		//And move exponent to r6
  	MOV r1, r8		//Move the modulus value to r1
-	
-	MOV r1, #0
-	CMP r6, r1
+
+	MOV r2, #0	
+	CMP r6, r2
 	BEQ ZeroExp		//If the exponent is zero, handle it
-	BLT NegExp		//If the exponent is negative, dismiss it with a return value of -1
+	BLE NegExp		//If the exponent is negative, dismiss it with a return value of -1
 
 	StartLoop:		//Begin the loop!
 		CMP r6, #1	//Compare the exponent value to 1.
@@ -48,6 +49,7 @@ pow:
 		
 		MUL r7, r7, r5	//Multiply the term by itself through every iteration of the loop and store in r7
 		MOV r0, r7
+		MOV r1, r8
 		BL modulo	//Perform modulo to prevent numbers from getting too large
 		MOV r7, r0	//Move the resulting value back to r7
 
@@ -103,14 +105,15 @@ gcd:
 
 	MOV r3, #0			//Confirm registers aren't being used for anything (I had some issues compiling if I didn't do this)
 	MOV r4, #0
- 
+
+	CMP r0, r1 
 	MOVGT r3, r0			//Use the same compare bit to move the greater between r0 and r1 to r3
 	MOVGT r4, r1			//and the lesser to r4. The MOV functions use the same comparison flag, so
 	MOVLT r4, r0			//MOVGT sees if r0 is greater than r1, and if is, performs the move operation
 	MOVLT r3, r1			//MOVLT does the same, but only if r0 is less than r1
-	MOV r0, #0			//Move 0 to r0 for comparison
  
 	StartGCDLoop:	
+		MOV r0, #0		//Move 0 to r0 for comparison
 		CMP r3, r0
 		BLE LogicError		//Handle any instance where the value drops to or below 0
 		CMP r3, r4
@@ -126,6 +129,8 @@ gcd:
 					//again until r3 = r4 = 21, which is the GCD
 	EndGCDLoop:			
 		MOV r0, r3		//We could move r3 or r4, but they should be the same, so move that value to r0
+		MOV r2, #1
+		CMP r0, r2
 		B EndGCD		//Branch to end program to prevent any other sections from activating
 
 	LogicError:
@@ -216,7 +221,7 @@ modulo:
 	// 	r2 = n
 cpubexp:
 	
-	SUB sp, sp, #12
+	SUB sp, sp, #20
 	STR lr, [sp, #0]
 	STR r9, [sp, #4]
 	STR r10, [sp, #8]
@@ -277,7 +282,7 @@ exp_loop:
 	LDR lr, [sp, #0]
 	LDR r9, [sp, #4]
 	LDR r10, [sp, #8]
-	ADD sp, sp, #12
+	ADD sp, sp, #20
 	MOV pc, lr
 
 .data
