@@ -162,9 +162,17 @@ EncryptSection:
 	LDR r0, =messagePrompt
 	BL printf
 
-	LDR r0, =stringFormat            // scanf format: "%s"
-	LDR r1, =messageBuffer	        // store input here
-	BL scanf
+    	// Set stdinPointer to stdin
+    	LDR r0, =stdinPointer
+    	LDR r1, =stdin
+    	STR r1, [r0]
+
+    	// Use fgets(messageBuffer, 256, stdin);
+    	LDR r0, =messageBuffer         @ buffer
+    	LDR r1, =inputBufferSize       @ size
+    	LDR r2, =stdinPointer
+    	LDR r2, [r2]                   @ r2 = stdin
+    	BL fgets
 
 	LDR r0, =encryptedFile
 	LDR r1, =fileWriteMode
@@ -336,7 +344,8 @@ EndProgram:
 	messageLength: .word 100						@ Maximum length for the message
 	cipherTextFile: .asciz "encrypted.txt"
 	oneByteBuf: .byte 0  // delete
-
+	stdinPointer: .word 0
+	inputBufferSize: .word 256            @ or whatever your message buffer size is
 
 	//decrypt
 	encryptedFile: .asciz "encrypted.txt"
