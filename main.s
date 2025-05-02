@@ -162,17 +162,11 @@ EncryptSection:
 	LDR r0, =messagePrompt
 	BL printf
 
-    	// Set stdinPointer to stdin
-    	LDR r0, =stdinPointer
-    	LDR r1, =stdin
-    	STR r1, [r0]
+	BL getchar
 
-    	// Use fgets(messageBuffer, 256, stdin);
-    	LDR r0, =messageBuffer         @ buffer
-    	LDR r1, =inputBufferSize       @ size
-    	LDR r2, =stdinPointer
-    	LDR r2, [r2]                   @ r2 = stdin
-    	BL fgets
+    	LDR r0, =stringFormat
+    	LDR r1, =messageBuffer
+	BL scanf
 
 	LDR r0, =encryptedFile
 	LDR r1, =fileWriteMode
@@ -222,6 +216,9 @@ encrypt_done:
     	LDR r1, =fp
     	LDR r0, [r1]
     	BL fclose
+
+	LDR r0, =encryptSuccess
+	BL printf
 
 	B MenuLoop
 
@@ -299,6 +296,9 @@ decrypt_done:
 	// Output: m (decrypted text)
 	// Write decrypted text to "plaintext.txt"
 
+	LDR r0, =decryptSuccess
+	BL printf
+
 	B MenuLoop
 
 EndProgram:
@@ -315,10 +315,13 @@ EndProgram:
 	prompt1: .asciz "Receiver, input a positive prime value < 50 for p: \n"
 	prompt2: .asciz "Receiver, input a positive prime value < 50 for q: \n"
 	decryptPrompt: .asciz "Searching for a file named encrypted.txt:\n"
+	encryptSuccess: .asciz "\nThe message has been encrypted and exported to encrypted.txt.\n\n"
+	decryptSuccess: .asciz "\nThe message has been decrypted and exported to plaintext.txt.\n\n"
+
 	// Formats 
 	format1: .asciz "%d"
-	stringFormat: .asciz "%s"  // delete?
-	decryptFormat: .asciz "%s"  // delete?
+	stringFormat: .asciz "%[^\n]"
+	decryptFormat: .asciz "%s"
 	inputFormat: .asciz "%[^\n]"
 	input: .asciz "%d"
 	num: .word 0
