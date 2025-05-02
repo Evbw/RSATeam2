@@ -182,7 +182,7 @@ main:
 	LDR r1, =messageBuffer	        // store input here
 	BL scanf
 
-	LDR r0, =cipherTextFile
+	LDR r0, =encryptedFile
 	LDR r1, =fileWriteMode
 	BL fopen
     	LDR r1, =fp
@@ -233,62 +233,73 @@ encrypt_done:
 
 @ ----- END ENCRYPT SECTION ------
 
-
-//Start decrypt section
-
-//DecryptSection:
-
 	// Function: decrypt.s
 	// Input: c (ciphertext), d (private key), n
 	// Output: m (decrypted text)
 	// Write decrypted text to "plaintext.txt"
+
+@ ----- START DECRYPT SECTION -----
+
 // 	LDR r0, =decryptPrompt		// Display prompt
 //	BL printf
     
-    
-//	LDR r0, =encryptedFile		//The name of the file
-//	LDR r1, =fileReadMode		//(encrypted.text, to be decrypted and written into plaintext.txt)
-//	BL openFile
-//	MOV r9, r0			//Save input file to r7
+	// Open encrypted.txt
+	LDR r0, =encryptedFile
+	LDR r1, =fileReadMode
+	BL fopen
+	LDR r1, =in_fp
+	STR r0, [r1]
 
+	// Open plaintext.txt
+	LDR r0, =plaintextFile
+	LDR r1, =fileWriteMode
+	BL fopen
+	LDR r1, =out_fp
+	STR r0, [r1]
 
-//	LDR r0, =plaintextFile		//Open the file to be written to
-//	LDR r1, =fileWriteMode		
-//	BL openFile
-//	MOV r8, r0			//Save output file to r8
+decrypt_loop:
 
-//decrypt_loop:
-	//Read the next encrypted character
-//	MOV r0, r9			//Input file 
-//	LDR r1, =cipherTextBuffer	//Buffer to store the encrypted character
-//	BL readFromFile			//Read the number into the buffer
-//	CMP r0, #0			//Check if we're at the end of the file
-//	BEQ decrypt_done		//And exit if we are
+	// Read the next encrypted character
+	// fscanf(in_fp, "%d", &num)
+	LDR r0, =in_fp
+	LDR r0, [r0]
+	LDR r1, =decryptReadingFormat
+	LDR r2, =decryptNum
+	BL fscanf
+	CMP r0, #1
+	BNE decrypt_done
 
-//	LDR r1, =cipherTextBuffer	//Load ciphertext into r1
-//	STRB r1, [r1]
+	// decrypt ciphertext
+	LDR r0, =decryptNum		// r0 = character to be decrypted
+	LDR r0, [r0]
+	MOV r1, r5			// r1 = private exponent d
+	MOV r2, r7			// r2 = modulus n
+	BL decrypt			// plaintext character return in r0
+	//MOV r1, r0			// ??
+	//STR r1, [r0]			// ??
 
-//	MOV r0, r1			//r0 = character to be decrypted
-//	MOV r1, r5			//r1 = private exponent d
-//	MOV r2, r6			//r2 = modulus n
-//	BL decrypt			//plaintext character return in r0
+	// Write the next decrypted character
+	// fprintf(out_fp, "%d", &num)
+	MOV r2, r0
+	LDR r0, =out_fp
+	LDR r0, [r0]
+	LDR r1, =decryptWritingFormat
+	BL fprintf
 
-//	LDR r0, =plaintextBuffer
-//	STRB r0, [r0]			//Save character to the plaintext buffer
+	B decrypt_loop			//Repeat until characters are exhausted
 
-//	MOV r0, r8			//Reload output file
-//	LDR r1, =plaintextBuffer	
-//	MOV r2, #1			//Write 1 byte
-//	BL writeToFile
+decrypt_done:
 
-//	B encrypt_loop			//Repeat until characters are exhausted
+	// fclose(in_fp)
+	LDR r0, =in_fp
+	LDR r0, [r0]
+	BL fclose
 
-//decrypt_done:
-//	MOV r0, r9			//Close both files
-//	BL closeFile
+	// fclose(out_fp)
+	LDR r0, =out_fp
+	LDR r0, [r0]
+	BL fclose
 
-//	MOV r0, r8
-//	BL closeFile
 	// Function: decrypt.s
 	// Input: c (ciphertext), d (private key), n
 	// Output: m (decrypted text)
@@ -296,7 +307,7 @@ encrypt_done:
 
 //	B MenuLoop
 
-//EndProgram:
+EndProgram:
 
 	// pop stack record
 	LDR lr, [sp, #0]
@@ -338,7 +349,7 @@ encrypt_done:
 	messageBuffer: .space 255						@ Space to store the message (up to 100 characters)
 	messageLength: .word 100						@ Maximum length for the message
 	cipherTextFile: .asciz "encrypted.txt"
-	oneByteBuf: .byte 0
+	oneByteBuf: .byte 0  // delete
 
 
 	//decrypt
@@ -348,7 +359,12 @@ encrypt_done:
 	fileWriteMode: .asciz "w"
 	cipherTextBuffer: .space 4
 	plaintextBuffer: .space 1
+	decryptNum: .space 256
+	decryptReadingFormat: .asciz "%d"
+	decryptWritingFormat: .asciz "%c"
 
 .bss
 	fp: .skip 4     // file pointer (32-bit)
+	in_fp: .skip 4
+	out_fp: .skip 4
 
