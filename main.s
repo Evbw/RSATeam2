@@ -263,7 +263,7 @@ decrypt_loop:
 	// fscanf(in_fp, "%d", &num)
 	LDR r0, =in_fp
 	LDR r0, [r0]
-	LDR r1, =decryptWritingFormat
+	LDR r1, =decryptReadingFormat
 	LDR r2, =decryptNum
 	BL fscanf
 	CMP r0, #1
