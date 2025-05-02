@@ -121,48 +121,32 @@ main:
 	// Store outputs in program dictionary
 	MOV r5, r0  //  private key
 
-//////// TESTING CHECKPOINT 1
 
-	LDR r0, =testingOutput
-	LDR r1, =pValue
-	LDR r1, [r1]
-	LDR r2, =qValue
-	LDR r2, [r2]
-	MOV r3, r7
-	BL printf
 
-	LDR r0, =testingOutput2
-	MOV r1, r6
-	MOV r2, r4
-	MOV r3, r5
-	BL printf
-
-//////// TESTING CHECKPOINT 1 - TESTED AND FUNCTIONAL
-
-//	B MenuLoop
+	B MenuLoop
 
 	//Enter Main Menu
 
-//	MenuLoop:
+	MenuLoop:
 
-//	LDR r0, =menuPrompt
-//	BL printf
+	LDR r0, =menuPrompt
+	BL printf
 
-//	LDR r0, =input
-//	LDR r1, =num
-//	BL scanf
+	LDR r0, =input
+	LDR r1, =num
+	BL scanf
 
-//	LDR r0, =num
-//	LDR r0, [r0]
+	LDR r0, =num
+	LDR r0, [r0]
 
-//	CMP r0, #-1
-//	BLE EndProgram
-//	CMP r0, #1
-//	BEQ p_StartLoop
-//	CMP r0, #2
-//	BEQ EncryptSection
-//	CMP r0, #3
-//	BGE DecryptSection
+	CMP r0, #-1
+	BLE EndProgram
+	CMP r0, #1
+	BEQ p_StartLoop
+	CMP r0, #2
+	BEQ EncryptSection
+	CMP r0, #3
+	BGE DecryptSection
 
     // Request message to encrypt, using public key, from Sender
     // for (character in message) { encrypt char and write in "encrypted.txt" }
@@ -173,7 +157,7 @@ main:
 
 
 @ ----- START ENCRYPT SECTION -----
-
+EncryptSection:
 	// Request a message from the user to be encrypted
 	LDR r0, =messagePrompt
 	BL printf
@@ -231,6 +215,8 @@ encrypt_done:
     	LDR r0, [r1]
     	BL fclose
 
+	B MenuLoop
+
 @ ----- END ENCRYPT SECTION ------
 
 	// Function: decrypt.s
@@ -242,7 +228,7 @@ encrypt_done:
 
 // 	LDR r0, =decryptPrompt		// Display prompt
 //	BL printf
-    
+DecryptSection:    
 	// Open encrypted.txt
 	LDR r0, =encryptedFile
 	LDR r1, =fileReadMode
@@ -305,7 +291,7 @@ decrypt_done:
 	// Output: m (decrypted text)
 	// Write decrypted text to "plaintext.txt"
 
-//	B MenuLoop
+	B MenuLoop
 
 EndProgram:
 
