@@ -131,6 +131,8 @@ gcd:
 	LogicError:
 		MOV r0, #-1		//Produce error output
 
+	Equal:
+
 	EndGCD:
 
 	LDR lr, [sp, #0]
