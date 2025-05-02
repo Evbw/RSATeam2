@@ -303,6 +303,8 @@ decrypt_done:
 
 EndProgram:
 
+	MOV r0, #1
+
 	// pop stack record
 	LDR lr, [sp, #0]
 	ADD sp, sp, #4
