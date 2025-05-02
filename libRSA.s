@@ -35,10 +35,10 @@ pow:
 	MOV r5, r0		//Store the term in r5 and r7
 	MOV r7, r0
 	MOV r6, r1		//And move exponent to r6
- 	MOV r1, r8		//Move the modulus value to r1
+ 	MOV r8, r2		//Move the modulus value to r1
 	
-	MOV r1, #0
-	CMP r6, r1
+	//MOV r1, #0
+	CMP r6, #0
 	BEQ ZeroExp		//If the exponent is zero, handle it
 	BLT NegExp		//If the exponent is negative, dismiss it with a return value of -1
 
@@ -48,6 +48,7 @@ pow:
 		
 		MUL r7, r7, r5	//Multiply the term by itself through every iteration of the loop and store in r7
 		MOV r0, r7
+		MOV r1, r8
 		BL modulo	//Perform modulo to prevent numbers from getting too large
 		MOV r7, r0	//Move the resulting value back to r7
 
