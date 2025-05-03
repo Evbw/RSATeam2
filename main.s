@@ -185,7 +185,8 @@ main:
 
     	// Use fgets(messageBuffer, 256, stdin);
     	LDR r0, =messageBuffer         @ buffer
-    	LDR r1, =inputBufferSize       @ size
+    	LDR r1, =inputBufferSize
+    	LDR r1, [r1]                   @ r1 = 256 (size)
     	LDR r2, =stdinPointer
     	LDR r2, [r2]                   @ r2 = stdin
     	BL fgets
@@ -354,7 +355,7 @@ EndProgram:
 	// Formats
 	encryptWritingFormat: .asciz "%d\n"
 	// Stored variables
-	messageBuffer: .space 255						@ Space to store the message (up to 100 characters)
+	messageBuffer: .space 256						@ Space to store the message (up to 100 characters)
 	messageLength: .word 100						@ Maximum length for the message
 	cipherTextFile: .asciz "encrypted.txt"
 	oneByteBuf: .byte 0  // delete
