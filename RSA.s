@@ -1,24 +1,23 @@
 //
-// Program Name: main.s
+// Program Name: RSA
+// Authors: Ayush Goel, Calvin Tang, Conner Wright, Everett Bowline
 // Section 81 Team 2
 // Purpose: Encrypt sender's message to be decrypted and read by receiver
 //
 
-.text
 .global main
 
-main:
-	// Program dictionary:
+.text
+
+  // Program dictionary:
 	// r4 - public key (e)
 	// r5 - private key (d)
 	// r6 - totient
 	// r7 - modulus (n)
-	// r8 - encrypt, message index register
-	// r9 - 
-	// r10 -
-	// r11 -
-	// r12 -
+  // r8 - encrypt, message index register
 
+// Begin main - Calvin Tang
+main:
 	// push stack record
 	SUB sp, sp, #4
 	STR lr, [sp, #0]
@@ -41,7 +40,8 @@ main:
         LDR r0, [r0]
         MOV r1, #0
         CMP r0, #0
-	ADDGE r1, r1, #1  // p >= 0
+	      ADDGE r1, r1, #1  // p >= 0
+
         MOV r2, #0
         CMP r0, #50
         ADDLT r2, r2, #1  // 0 <= p < 50
@@ -156,21 +156,13 @@ main:
     // Write ciphertext to "encrypted.txt"
 
 
-@ ----- START ENCRYPT SECTION -----
+@ ----- START ENCRYPT SECTION - Conner Wright -----
 EncryptSection:
 	// Request a message from the user to be encrypted
 	LDR r0, =messagePrompt
 	BL printf
 
 	BL getchar
-
-    	// Use fgets(messageBuffer, 256, stdin);
-    	LDR r0, =messageBuffer         @ buffer
-    	LDR r1, =inputBufferSize
-    	LDR r1, [r1]                   @ r1 = 256 (size)
-    	LDR r2, =stdinPointer
-    	LDR r2, [r2]                   @ r2 = stdin
-    	BL fgets
 
     	LDR r0, =stringFormat
     	LDR r1, =messageBuffer
@@ -237,10 +229,8 @@ encrypt_done:
 	// Output: m (decrypted text)
 	// Write decrypted text to "plaintext.txt"
 
-@ ----- START DECRYPT SECTION -----
+//Begin Decrypt section - Everett Bowline
 
-// 	LDR r0, =decryptPrompt		// Display prompt
-//	BL printf
 DecryptSection:    
 	// Open encrypted.txt
 	LDR r0, =encryptedFile
@@ -337,23 +327,26 @@ EndProgram:
 	num: .word 0
 	
 	// Stored values
-
 	pValue: .word 0
 	qValue: .word 0
 	decryptInput: .word 100
+
 	// Error messages
 	p_ErrorMsg1: .asciz "Invalid p value. Requirement: 0 <= p < 50, and must be prime.\n"
 	q_ErrorMsg1: .asciz "Invalid q value. Requirement: 0 <= q < 50, and must be prime.\n"
+
 	// Outputs
 	testingOutput: .asciz "The value for p is %d.\nThe value for q is %d.\nThe value for modulus (n) is %d.\n"
 	testingOutput2: .asciz "The value for the totient is %d.\nThe value for public key (e) is %d.\nThe value for private key (d) is %d.\n\n"
 
 @ ----- .data for the Encrypt section ----
 	messagePrompt: .asciz "Please enter the message to encrypt: \n"		@ Prompt user to enter a message
+
 	// Formats
 	encryptWritingFormat: .asciz "%d\n"
+
 	// Stored variables
-	messageBuffer: .space 256						@ Space to store the message (up to 100 characters)
+	messageBuffer: .space 255						@ Space to store the message (up to 100 characters)
 	messageLength: .word 100						@ Maximum length for the message
 	cipherTextFile: .asciz "encrypted.txt"
 	oneByteBuf: .byte 0  // delete
@@ -375,4 +368,3 @@ EndProgram:
 	fp: .skip 4     // file pointer (32-bit)
 	in_fp: .skip 4
 	out_fp: .skip 4
-
