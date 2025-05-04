@@ -46,12 +46,6 @@ main:
         MOV r1, #0
         CMP r0, #0
 	      ADDGE r1, r1, #1  // p >= 0
-
-        MOV r2, #0
-        CMP r0, #50
-        ADDLT r2, r2, #1  // 0 <= p < 50
-        AND r1, r1, r2
-
         // Verify p is prime
         BL isPrime
         AND r0, r0, r1
@@ -82,10 +76,6 @@ main:
         MOV r1, #0
         CMP r0, #0
 	ADDGE r1, r1, #1  // q >= 0
-        MOV r2, #0
-        CMP r0, #50
-        ADDLT r2, r2, #1  // 0 <= q < 50
-        AND r1, r1, r2
 
         // Verify q is prime
         BL isPrime
