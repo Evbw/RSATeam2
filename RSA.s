@@ -245,7 +245,7 @@ DecryptSection:
 	LDR r0, =plaintextFile		// Open output file - plaintext.txt in read mode
 	LDR r1, =fileWriteMode
 	BL fopen
-	LDR r1, =in_fp
+	LDR r1, =out_fp
 	STR r0, [r1]
 
 decrypt_loop:
@@ -276,7 +276,6 @@ decrypt_loop:
 	B decrypt_loop			//Repeat until characters are exhausted
 
 decrypt_done:
-
 	LDR r0, =in_fp			// Close encrypted.txt
 	LDR r0, [r0]			// fclose(in_fp)
 	BL fclose
@@ -288,7 +287,6 @@ decrypt_done:
 	// Output
 	LDR r0, =decryptSuccess		// Output success message
 	BL printf
-
 	B MenuLoop
 
 //////////////////////////////////////////////////////////// 
