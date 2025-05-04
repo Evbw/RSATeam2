@@ -131,27 +131,26 @@ main:
 // Contributors: Everett Bowline
 //////////////////////////////////////////////////////////// 
 
-	//Enter Main Menu
+	// START: Menu loop
 	MenuLoop:
+		LDR r0, =menuPrompt
+		BL printf
 
-	LDR r0, =menuPrompt
-	BL printf
+		LDR r0, =input
+		LDR r1, =num
+		BL scanf
 
-	LDR r0, =input
-	LDR r1, =num
-	BL scanf
+		LDR r0, =num
+		LDR r0, [r0]
 
-	LDR r0, =num
-	LDR r0, [r0]
-
-	CMP r0, #-1
-	BLE EndProgram
-	CMP r0, #1
-	BEQ p_StartLoop  // Set up encryption values again
-	CMP r0, #2
-	BEQ EncryptSection  // Encrypt a message, write to encrypted.txt
-	CMP r0, #3
-	BGE DecryptSection  // Decrypt a message, write to plaintext.txt
+		CMP r0, #-1
+		BLE EndProgram
+		CMP r0, #1
+		BEQ p_StartLoop  	// Regenerate p & q
+		CMP r0, #2
+		BEQ EncryptSection  	// Encrypt a message, write to encrypted.txt
+		CMP r0, #3
+		BGE DecryptSection  	// Decrypt a message, write to plaintext.txt
 
 //////////////////////////////////////////////////////////// 
 // END Menu Feature Section
@@ -170,59 +169,54 @@ main:
     // Write ciphertext to "encrypted.txt"
 
 EncryptSection:
-	// Request a message from the user to be encrypted
-	LDR r0, =encryptPrompt
+	LDR r0, =encryptPrompt		// Request a message from the user to be encrypted
 	BL printf
-	BL getchar
+	BL getchar			// Clear input buffer newline
     	LDR r0, =stringFormat
     	LDR r1, =messageBuffer
-	BL scanf
+	BL scanf			// Read full line message
 
-	// Open encrypted.txt
-	LDR r0, =encryptedFile
+	LDR r0, =encryptedFile		// Open encrypted file in write mode
 	LDR r1, =fileWriteMode
 	BL fopen
     	LDR r1, =fp
-    	STR r0, [r1]        		// Save file pointer
+    	STR r0, [r1]        		// Store file pointer
 
 	// Intialization for encrypt loop
-	LDR r8, =messageBuffer		// r8 = user message
+	LDR r8, =messageBuffer		// Initialize message pointer
 
 encrypt_loop:
 	// Loop through each character of the message
 	// Load the current character from the message
-	LDRB r3, [r8]
-	CMP r3, #0
+	LDRB r3, [r8]			// Load byte (char) from message
+	CMP r3, #0			// Verify this is the end of the string
 	BEQ encrypt_done
 
-	MOV r0, r3 			// r0 = character
-	MOV r1, r4			// r1 = exponent
-	MOV r2, r7			// r2 = modulus
+	MOV r0, r3 			// r0 = character to encrypt (c)
+	MOV r1, r4			// r1 = public key exponent (e)
+	MOV r2, r7			// r2 = modulus (n)
 
 	// Encrypt the character m using RSA: c = m^e % n
 	// Call the encrypt function with m (r1), e (r5), n (r6)
-	BL encrypt			// r0 = encrypted byte
+	BL encrypt			// r0 = encrypted int
 
  	// Write the ciphertext to encrypted.txt
     	// fprintf(fp, format %d, integer)
-	MOV r2, r0
+	MOV r2, r0			// r2 = encrypted value
 	LDR r1, =encryptWritingFormat
 	LDR r3, =fp
-    	LDR r0, [r3]
-	BL fprintf
+    	LDR r0, [r3]			// Load file pointer
+	BL fprintf			// Write encrypted value to file
 
-	// Loop to the next message index
-	ADD r8, r8, #1
+	ADD r8, r8, #1			// Move to next character
 	B encrypt_loop
 
 encrypt_done:
-    	// Close encrypted.txt
     	LDR r1, =fp
     	LDR r0, [r1]
-    	BL fclose
+    	BL fclose			// Close encrypted file
 
-	// Output
-	LDR r0, =encryptSuccess
+	LDR r0, =encryptSuccess		// Output success message
 	BL printf
 
 	B MenuLoop
@@ -233,7 +227,7 @@ encrypt_done:
 
 //////////////////////////////////////////////////////////// 
 // START Decrypt Message Section
-// Contributors: Everett Bowline
+// Contributors: Everett Bowline, Conner Wright
 //////////////////////////////////////////////////////////// 
 
 	// Function: decrypt.s
@@ -241,70 +235,58 @@ encrypt_done:
 	// Output: m (decrypted text)
 	// Write decrypted text to "plaintext.txt"
 
-//Begin Decrypt section - Everett Bowline
-
 DecryptSection:    
-	// Open encrypted.txt
-	LDR r0, =encryptedFile
+	LDR r0, =encryptedFile		// Open input file - encrypted.txt in read mode
 	LDR r1, =fileReadMode
 	BL fopen
 	LDR r1, =in_fp
 	STR r0, [r1]
 
-	// Open plaintext.txt
-	LDR r0, =plaintextFile
+	LDR r0, =plaintextFile		// Open output file - plaintext.txt in read mode
 	LDR r1, =fileWriteMode
 	BL fopen
-	LDR r1, =out_fp
+	LDR r1, =in_fp
 	STR r0, [r1]
 
 decrypt_loop:
-
 	// Read the next encrypted character in encrypted.txt
 	// fscanf(in_fp, "%d", &num)
 	LDR r0, =in_fp
-	LDR r0, [r0]
+	LDR r0, [r0]			// Load file pointer
 	LDR r1, =decryptReadingFormat
-	LDR r2, =decryptNum
+	LDR r2, =decryptNum		// Store integer read
 	BL fscanf
-	CMP r0, #1
+	CMP r0, #1			// Check if read was successful
 	BNE decrypt_done
 
-	// decrypt ciphertext
 	LDR r0, =decryptNum		// r0 = character to be decrypted
 	LDR r0, [r0]
 	MOV r1, r5			// r1 = private exponent d
 	MOV r2, r7			// r2 = modulus n
 	BL decrypt			// plaintext character return in r0
-	//MOV r1, r0			// ??
-	//STR r1, [r0]			// ??
 
 	// Write the next decrypted character to plaintext.txt
 	// fprintf(out_fp, "%d", &num)
 	MOV r2, r0
 	LDR r0, =out_fp
-	LDR r0, [r0]
+	LDR r0, [r0]			// Load output file pointer
 	LDR r1, =decryptWritingFormat
-	BL fprintf
+	BL fprintf			// Write decrypted char to file
 
 	B decrypt_loop			//Repeat until characters are exhausted
 
 decrypt_done:
 
-	// Close encrypted.txt
-	// fclose(in_fp)
-	LDR r0, =in_fp
-	LDR r0, [r0]
+	LDR r0, =in_fp			// Close encrypted.txt
+	LDR r0, [r0]			// fclose(in_fp)
 	BL fclose
 
-	// Close plaintext.txt
-	// fclose(out_fp)
-	LDR r0, =out_fp
-	LDR r0, [r0]
+	LDR r0, =out_fp			// Close plaintext.txt
+	LDR r0, [r0]			// fclose(out_fp)
 	BL fclose
 
 	// Output
-	LDR r0, =decryptSuccess
+	LDR r0, =decryptSuccess		// Output success message
 	BL printf
 
 	B MenuLoop
@@ -317,20 +299,21 @@ EndProgram:
 
 	MOV r0, #1
 
-	// pop stack record
-	LDR lr, [sp, #0]
-	ADD sp, sp, #4
-	MOV pc, lr
+	LDR lr, [sp, #0]		// Restore link register
+	ADD sp, sp, #4			// Restore stack
+	MOV pc, lr			// Return
 
 .data
 	// Prompts
-	introPrompt: .asciz "Welcome to our RSA algorithm program. We first require encryption setup:\n"
+	introPrompt: .asciz "Welcome to our RSA algorithm program. We first require encryption setup.\n"
 	menuPrompt: .asciz "Please choose an option:\nSet up RSA Encryption (1)\nEncrypt a message to encrypted.txt (2)\nDecrypt ciphertext from encrypted.txt to plaintext.txt (3)\nExit the program (-1):\n"
-	prompt1: .asciz "Receiver, input a positive prime value < 50 for p: \n"
-	prompt2: .asciz "Receiver, input a positive prime value < 50 for q: \n"
+	prompt1: .asciz "Receiver, input a positive prime number for p: \n"
+	prompt2: .asciz "Receiver, input a different positive prime number for q: \n"
 	encryptPrompt: .asciz "Please enter the message to encrypt: \n"	
+	decryptPrompt: .asciz "Searching for a file named encrypted.txt:\n"
 
-	// Formats 
+	// Formats
+ 	format1: .asciz "%d"
 	stringFormat: .asciz "%[^\n]"
 	input: .asciz "%d"
 	num: .word 0
@@ -341,6 +324,7 @@ EndProgram:
 	qValue: .word 0
 	decryptNum: .space 256
 	messageBuffer: .space 255
+ 	messageLength:	.word 100
 	encryptedFile: .asciz "encrypted.txt"
 	plaintextFile: .asciz "plaintext.txt"
 	fileReadMode: .asciz "r"
@@ -349,8 +333,8 @@ EndProgram:
 	decryptWritingFormat: .asciz "%c"
 
 	// Error messages
-	p_ErrorMsg1: .asciz "Invalid p value. Requirement: 0 <= p < 50, and must be prime.\n"
-	q_ErrorMsg1: .asciz "Invalid q value. Requirement: 0 <= q < 50, and must be prime.\n"
+	p_ErrorMsg1: .asciz "Invalid p value. Requirement: p must be a positive prime number.\n"
+	q_ErrorMsg1: .asciz "Invalid q value. Requirement: q must be a different positive prime number.\n"
 
 	// Outputs
 	RSAValuesOutput: .asciz "The value for p is %d.\nThe value for q is %d.\nThe value for modulus (n) is %d.\n"
