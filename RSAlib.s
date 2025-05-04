@@ -206,7 +206,7 @@ modulo:
 //End modulo
 
 //Begin cpubexp
-//Author: Ayush Goel
+//Author: Ayush Goel, Calvin Tang
 
 .text
 	// Function Input
@@ -467,7 +467,7 @@ isPrime:
 //End isPrime
 
 //Begin decrypt
-//Author: Conner Wright
+//Author: Calvin Tang
 
 .text
 	// Function Input
