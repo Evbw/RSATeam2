@@ -8,6 +8,7 @@
 .global main
 
 main:
+
 	// Register usage:
 	// r4 - public key (e)
 	// r5 - private key (d)
@@ -73,11 +74,14 @@ q_error:
 
 q_EndLoop:
 
+
 	// Generate public exponent, totient, and modulus
+
 	LDR r0, =pValue
 	LDR r0, [r0]
 	LDR r1, =qValue
 	LDR r1, [r1]
+
 	BL cpubexp					// Outputs: r0=e, r1=φ(n), r2=n
 	MOV r4, r0					// Store e
 	MOV r6, r1					// Store φ(n)
@@ -90,6 +94,7 @@ q_EndLoop:
 	B MenuLoop					// Go to main menu
 
 // START: Menu loop
+
 MenuLoop:
 	LDR r0, =menuPrompt
 	BL printf
@@ -102,6 +107,7 @@ MenuLoop:
 	BLE EndProgram
 	CMP r0, #1
 	BEQ p_StartLoop				// Regenerate p & q
+
 	CMP r0, #2
 	BEQ EncryptSection
 	CMP r0, #3
@@ -117,10 +123,12 @@ EncryptSection:
 	BL scanf					// Read full line message
 
 	// Open encrypted file in write mode
+
 	LDR r0, =encryptedFile
 	LDR r1, =fileWriteMode
 	BL fopen
 	LDR r1, =fp
+
 	STR r0, [r1]				// Store file pointer
 
 	LDR r8, =messageBuffer		// Initialize message pointer
@@ -147,19 +155,24 @@ encrypt_loop:
 encrypt_done:
 	LDR r1, =fp
 	LDR r0, [r1]
+
 	BL fclose					// Close encrypted file
+
 	LDR r0, =encryptSuccess
 	BL printf
 	B MenuLoop
 
+
 // ----- START DECRYPT SECTION -----
 DecryptSection:
 	// Open encrypted input file
+
 	LDR r0, =encryptedFile
 	LDR r1, =fileReadMode
 	BL fopen
 	LDR r1, =in_fp
 	STR r0, [r1]
+
 
 	// Open plaintext output file
 	LDR r0, =plaintextFile
@@ -170,6 +183,7 @@ DecryptSection:
 
 decrypt_loop:
 	LDR r0, =in_fp
+
 	LDR r0, [r0]				// Load file pointer
 	LDR r1, =decryptReadingFormat
 	LDR r2, =decryptNum			// Store integer read
@@ -199,6 +213,7 @@ decrypt_done:
 	LDR r0, =out_fp
 	LDR r0, [r0]
 	BL fclose 					// Close output file
+
 
 	LDR r0, =decryptSuccess
 	BL printf
