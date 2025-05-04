@@ -23,74 +23,63 @@ main:
 // Contributors: Calvin Tang
 //////////////////////////////////////////////////////////// 
 
-	// push stack record
+	// Save link register to stack (function return support)
 	SUB sp, sp, #4
 	STR lr, [sp, #0]
 
+	// Print introduction prompt
 	LDR r0, =introPrompt
 	BL printf
 
-    // Request p, q from Receiver; ensure p and q meet requirements
-    // Loop for p value. p must be prime and < 50.
-    p_StartLoop:
+	// START: Loop to get valid 'p' value
+	p_StartLoop:
+        	LDR r0, =prompt1			// Prompt user for p
+        	BL printf
+        	LDR r0, =input				// Set scanf format
+        	LDR r1, =pValue				// Set memory location to store input
+        	BL scanf
 
-        LDR r0, =prompt1
-        BL printf
-        LDR r0, =input
-        LDR r1, =pValue
-        BL scanf  // p stored in pValue
+        	LDR r0, =pValue				// Load input value
+        	LDR r0, [r0]
+        	CMP r0, #0
+		MOVLE r1, #0				// If p ≤ 0, set r1 = 0
+		MOVGT r1, #1				// If p > 0, set r1 = 1
+		BL isPrime 				// Check if r0 is prime (result in r0)
+		AND r0, r0, r1				// Ensure input is positive and prime
+		CMP r0, #1
+		BNE p_error				// Invalid p value
+		B p_EndLoop				// Valid p value
+	p_error:
+		LDR r0, =p_ErrorMsg1
+		BL printf
+		B p_StartLoop				// Retry
 
-        // Verify 0 < p < 50
-        LDR r0, =pValue
-        LDR r0, [r0]
-        MOV r1, #0
-        CMP r0, #0
-	      ADDGE r1, r1, #1  // p >= 0
-        // Verify p is prime
-        BL isPrime
-        AND r0, r0, r1
+	p_EndLoop:
 
-        CMP r0, #1
-        BNE p_error
-            // Statement if p is valid
-            B p_EndLoop
-        p_error:
-            LDR r0, =p_ErrorMsg1
-            BL printf
-            B p_StartLoop
+	// START: Loop to get valid 'q' value
+	q_StartLoop:
+		LDR r0, =prompt2
+		BL printf
+		LDR r0, =format1
+		LDR r1, =qValue
+		BL scanf
 
-    p_EndLoop:
+		LDR r0, =qValue
+		LDR r0, [r0]
+		CMP r0, #0
+		MOVLE r1, #0
+		MOVGT r1, #1
+		BL isPrime
+		AND r0, r0, r1
+		CMP r0, #1
+		BNE q_error
+		B q_EndLoop
+	q_error:
+		LDR r0, =q_ErrorMsg1
+		BL printf
+		B q_StartLoop
 
-    // Loop for q value. q must be prime and < 50.
-    q_StartLoop:
-
-        LDR r0, =prompt2
-        BL printf
-        LDR r0, =input
-        LDR r1, =qValue
-        BL scanf  // q stored in pValue
-
-        // Verify 0 < q < 50
-        LDR r0, =qValue
-        LDR r0, [r0]
-        MOV r1, #0
-        CMP r0, #0
-	ADDGE r1, r1, #1  // q >= 0
-
-        // Verify q is prime
-        BL isPrime
-        AND r0, r0, r1
-
-        CMP r0, #1
-        BNE q_error
-            // Statement if q is valid
-            B q_EndLoop
-        q_error:
-            LDR r0, =q_ErrorMsg1
-            BL printf
-            B q_StartLoop
-
-    q_EndLoop:
+	q_EndLoop:
 
 //////////////////////////////////////////////////////////// 
 // END RSA Encryption Setup Section
@@ -101,28 +90,20 @@ main:
 // Contributors: Calvin Tang
 //////////////////////////////////////////////////////////// 
 
-	// Receiver generates public key
-	// Function: cpubexp.s
-	// Inputs: r0 = p, r1 = q
-	// Output: r0 = e (public key), r1 = totient, r2 = n
+	// Generate public exponent, totient, and modulus
 	LDR r0, =pValue
 	LDR r0, [r0]
 	LDR r1, =qValue
 	LDR r1, [r1]
-	BL cpubexp
-	// Store outputs in program dictionary
-	MOV r4, r0  // public key
-	MOV r6, r1  // totient
-	MOV r7, r2  // modulus
+	BL cpubexp			// Outputs: r0=e, r1=φ(n), r2=n
+	
+	MOV r4, r0  			// Store e: public key
+	MOV r6, r1  			// Store φ(n): totient
+	MOV r7, r2  			// Store n: modulus
 
-
-	// Receiver generates private key
-	// Function: cprivexp.s
-	// Input: r0 = e (public key), r1 = totient
-	// Output: r0 = d (private key)
-	BL cprivexp
-	// Store outputs in program dictionary
-	MOV r5, r0  //  private key
+	// Generate private key (d)
+	BL cprivexp			// Inputs: e, φ(n); Output: d
+	MOV r5, r0  			// Store d: private key
 
 	// Output encryption info to Receiver
 	LDR r0, =RSAValuesOutput
@@ -133,11 +114,11 @@ main:
 	MOV r3, r7
 	BL printf
 
-	LDR r0, =RSAValuesOutput2
-	MOV r1, r6
-	MOV r2, r4
-	MOV r3, r5
-	BL printf
+	//LDR r0, =RSAValuesOutput2
+	//MOV r1, r6
+	//MOV r2, r4
+	//MOV r3, r5
+	//BL printf
 
 	B MenuLoop
 
